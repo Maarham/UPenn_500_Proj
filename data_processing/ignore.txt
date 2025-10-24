@@ -1,0 +1,19 @@
+311_service_request.csv:
+Ignore: supervisor district, resolution_action_updated_date, source, media url, location
+Fire-safety-complaints.csv:
+Ignore: Primary, Complaint Number, Complaint Item Type (ComplaintID = Complaint Number + Completing Item Type + Primary), Battalion, Station Area, Fire Prevention District, Entry Date, Supervisor District, Neighborhoods (Old), Police Districts, Neighborhood_from_fyvs_ahh9
+Fire_violations_csv:
+Ignore: Battalion, Station Area, Fire Prevention District, Citation Number, Primary, Neighborhood_from_fyvs_ahhh9 2, Neighborhoods (Old) 2, Police District 2, Central Market/Tenderloin Boundary 2, Central Market/Tenderloin Boundary Polygon - Updated 2, Neighborhoods, SF Find Neighborhoods, Current Police Districts 3, Current Supervisor Districts
+Sff_service_calls.csv:
+Ignore: watch_date, entry_timestamp, available_timestamp, battalion, station_area, box, original priority, priority, call type group, location, row_id
+Sfpd_incidents.csv:
+Ignore: Location	
+Fire_incidents.csv:
+Ignore: '2017 Fix It Zones', 'HSOC Zones as of 2018-06-05', 'HSOC Zones',
+       'Central Market/Tenderloin Boundary Polygon - Updated',
+       'Central Market/Tenderloin Boundary',
+       'Civic Center Harm Reduction Project Boundary',
+       'Number of floors with minimum damage',
+       'Number of floors with significant damage',
+       'Number of floors with heavy damage',
+       'Number of floors with extreme damage'
