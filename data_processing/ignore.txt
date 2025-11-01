@@ -2,6 +2,27 @@
 Ignore: supervisor district, resolution_action_updated_date, source, media url, location
 Fire-safety-complaints.csv:
 Ignore: Primary, Complaint Number, Complaint Item Type (ComplaintID = Complaint Number + Completing Item Type + Primary), Battalion, Station Area, Fire Prevention District, Entry Date, Supervisor District, Neighborhoods (Old), Police Districts, Neighborhood_from_fyvs_ahh9
+Fire-inspections.csv:
+Ignore: Referral Agency,
+  Complaint Number,
+  Violation Number,
+  Battalion,
+  Station Area,
+  Supervisor District,
+  Neighborhoods (old),
+  Zip Codes,
+  Fire Prevention Districts,
+  Police Districts,
+  Supervisor Districts,
+  Central Market/Tenderloin Boundary,
+  Central Market/Tenderloin Boundary Polygon - Updated,
+  Neighborhoods',
+  SF Find Neighborhoods,
+  Current Police Districts,
+  Current Supervisor Districts,
+  Analysis Neighborhoods,
+  Lien Date,
+  Interest Amount
 Fire_violations_csv:
 Ignore: Battalion, Station Area, Fire Prevention District, Citation Number, Primary, Neighborhood_from_fyvs_ahhh9 2, Neighborhoods (Old) 2, Police District 2, Central Market/Tenderloin Boundary 2, Central Market/Tenderloin Boundary Polygon - Updated 2, Neighborhoods, SF Find Neighborhoods, Current Police Districts 3, Current Supervisor Districts
 Sff_service_calls.csv:
