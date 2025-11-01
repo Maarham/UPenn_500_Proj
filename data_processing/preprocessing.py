@@ -84,7 +84,55 @@ def process_csv_with_ignore(csv_path, output_dir, ignore_file_path='ignore.txt')
             'Fire Prevention Districts', 'Police Districts', 'Supervisor Districts', 
             'Central Market/Tenderloin Boundary', 'Central Market/Tenderloin Boundary Polygon - Updated', 'Neighborhoods', 'SF Find Neighborhoods', 'Current Police Districts', 
             'Current Supervisor Districts', 'Analysis Neighborhoods', 'Lien Date', 'Interest Amount', 'Point']
-
+        if str(filename).lower() == 'fire-incidents.csv':
+            columns_to_ignore = ['2017 Fix It Zones', 'HSOC Zones as of 2018-06-05', 'HSOC Zones',
+            'Central Market/Tenderloin Boundary Polygon - Updated',
+            'Central Market/Tenderloin Boundary',
+            'Civic Center Harm Reduction Project Boundary',
+            'Number of floors with minimum damage',
+            'Number of floors with significant damage',
+            'Number of floors with heavy damage',
+            'Number of floors with extreme damage']
+        if str(filename).lower() == 'fire-safety-complaints.csv':
+            columns_to_ignore = [ "Primary",
+            "Complaint Number",
+            "Complaint Item Type",
+            "Battalion",
+            "Station Area",
+            "Fire Prevention District",
+            "Entry Date",
+            "Supervisor District",
+            "Neighborhoods (Old)",
+            "Police Districts",
+            "Neighborhood_from_fyvs_ahh9",
+            "Neighborhoods_from_fyvs_ahh9",
+            "Supervisor Districts", "Fire Prevention Districts", "Current Police Districts",
+            "Neighborhoods - Analysis Boundaries", "Zip Codes"]
+        if str(filename).lower() == 'fire-violations.csv':
+            columns_to_ignore = [
+                "Battalion",
+                "Station Area",
+                "Neighborhoods_from_fyvs_ahh9 2",
+    "Supervisor Districts 2",
+    "Fire Prevention Districts 2",
+    "Current Police Districts 2",
+    "Neighborhoods - Analysis Boundaries 2",
+    "Zip Codes 2",
+    "Police Districts 2",
+                "Fire Prevention District",
+                "Citation Number",
+                "Primary",
+                "Neighborhood_from_fyvs_ahhh9 2",
+                "Neighborhoods (Old) 2",
+                "Police District 2",
+                "Central Market/Tenderloin Boundary 2",
+                "Central Market/Tenderloin Boundary Polygon - Updated 2",
+                "Neighborhoods",
+                "SF Find Neighborhoods",
+                "Current Police Districts 3",
+                "Current Supervisor Districts",
+                'supervisor district'
+            ]
     # Read the CSV
     print(f"Reading {csv_path}...")
     df = pd.read_csv(csv_path)
@@ -136,6 +184,11 @@ def process_csv_with_ignore(csv_path, output_dir, ignore_file_path='ignore.txt')
 
     # Create output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
+
+
+    ## extra data preprocessing
+    if str(filename).lower() == 'fire-incidents.csv':
+        df['Incident Date'] = pd.to_datetime(df['Incident Date'], errors='coerce')
 
     # Save to output directory
     output_path = os.path.join(output_dir, filename)
