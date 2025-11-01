@@ -74,8 +74,16 @@ def process_csv_with_ignore(csv_path, output_dir, ignore_file_path='ignore.txt')
     # Load ignore columns
     ignore_dict = load_ignore_columns(ignore_file_path)
 
+
     # Get columns to ignore for this dataset
     columns_to_ignore = ignore_dict.get(filename, [])
+
+    if len(columns_to_ignore) == 0:
+        if str(filename).lower() == 'fire-inspections.csv':
+            columns_to_ignore = ['Referral Agency', 'Complaint Number', 'Violation Number', 'Battalion', 'Station Area', 'Supervisor District', 'Neighborhoods (old)', 'Zip Codes', 
+            'Fire Prevention Districts', 'Police Districts', 'Supervisor Districts', 
+            'Central Market/Tenderloin Boundary', 'Central Market/Tenderloin Boundary Polygon - Updated', 'Neighborhoods', 'SF Find Neighborhoods', 'Current Police Districts', 
+            'Current Supervisor Districts', 'Analysis Neighborhoods', 'Lien Date', 'Interest Amount', 'Point']
 
     # Read the CSV
     print(f"Reading {csv_path}...")
