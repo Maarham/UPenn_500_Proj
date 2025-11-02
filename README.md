@@ -11,7 +11,7 @@ After that is complete, make sure to log in to your Google Cloud account by runn
 
 Install all of the required packages using pip: `pip install -r requirements.txt`
 
-Once complete, change the project-ID in the first cell in `download_data.ipyn` and then run the panels to download the data into the `/data` directory. 
+Once complete, change the project-ID in the first cell in `download_data.ipynb` and then run the panels to download the data into the `/data` directory. 
 
 ## Fire Dataset
 
