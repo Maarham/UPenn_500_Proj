@@ -5,6 +5,8 @@ This file will conduct the preprocessing for the data that we currently have in 
 import pandas as pd
 import os
 import re
+import sqlite3
+import csv
 
 
 def load_ignore_columns(ignore_file_path='ignore.txt'):
@@ -198,16 +200,71 @@ def process_csv_with_ignore(csv_path, output_dir, ignore_file_path='ignore.txt')
     return output_path
 
 
-def process_directory(input_dir, output_dir, ignore_file_path='ignore.txt'):
+def csv_to_sqlite_table(csv_path, conn):
+    """
+    Convert a CSV file to a table in an existing SQLite database.
+
+    Args:
+        csv_path: Path to the CSV file
+        conn: SQLite database connection
+
+    Returns:
+        Name of the created table
+    """
+    # Get the filename without extension to use as table name
+    filename = os.path.basename(csv_path)
+    table_name = os.path.splitext(filename)[0]
+
+    # Sanitize table name (replace hyphens and spaces with underscores)
+    table_name = table_name.replace('-', '_').replace(' ', '_')
+
+    print(f"Adding {filename} as table '{table_name}'...")
+
+    cursor = conn.cursor()
+
+    # Drop table if it exists
+    cursor.execute(f'DROP TABLE IF EXISTS "{table_name}"')
+
+    # Read CSV and create table
+    with open(csv_path, 'r') as file:
+        csv_reader = csv.reader(file)
+        headers = next(csv_reader)  # Get column names
+
+        # Create table with columns from CSV headers
+        columns = ', '.join([f'"{col}" TEXT' for col in headers])
+        cursor.execute(f'CREATE TABLE "{table_name}" ({columns})')
+
+        # Insert data
+        placeholders = ', '.join(['?' for _ in headers])
+        for row in csv_reader:
+            cursor.execute(f'INSERT INTO "{table_name}" VALUES ({placeholders})', row)
+
+    conn.commit()
+    print(f"Table '{table_name}' created successfully\n")
+
+    return table_name
+
+
+def process_directory(input_dir, output_dir, ignore_file_path='ignore.txt', create_sql_databases=False, sql_db_dir='sql_databases'):
     """
     Process all CSV files in a directory by removing ignored columns.
+
+    Args:
+        input_dir: Directory containing CSV files to process
+        output_dir: Directory where processed CSVs will be saved
+        ignore_file_path: Path to the ignore.txt file
+        create_sql_databases: If True, also convert processed CSVs to SQLite databases
+        sql_db_dir: Directory where SQLite databases will be saved
+
+    Returns:
+        Dictionary with 'csv_files' and optionally 'db_files' lists
     """
     # Find all CSV files in the input directory
     csv_files = [f for f in os.listdir(input_dir) if f.endswith('.csv')]
 
     if not csv_files:
         print(f"No CSV files found in {input_dir}")
-        return []
+        return {'csv_files': [], 'db_files': []}
 
     print(f"Found {len(csv_files)} CSV files to process\n")
 
@@ -218,22 +275,63 @@ def process_directory(input_dir, output_dir, ignore_file_path='ignore.txt'):
         processed_files.append(output_path)
 
     print(f"Processed {len(processed_files)} files successfully!")
-    return processed_files
+
+    result = {'csv_files': processed_files, 'db_file': None, 'tables': []}
+
+    # Convert to SQLite database if requested
+    if create_sql_databases:
+        print(f"\nCreating SQLite database with all processed CSVs as tables...")
+
+        # Create database directory if it doesn't exist
+        os.makedirs(sql_db_dir, exist_ok=True)
+
+        # Create single database file
+        db_path = os.path.join(sql_db_dir, 'processed_data.db')
+
+        # Remove existing database if it exists
+        if os.path.exists(db_path):
+            os.remove(db_path)
+            print(f"Removed existing database at {db_path}")
+
+        # Connect to database
+        conn = sqlite3.connect(db_path)
+
+        # Add each CSV as a table
+        tables = []
+        for csv_path in processed_files:
+            table_name = csv_to_sqlite_table(csv_path, conn)
+            tables.append(table_name)
+
+        conn.close()
+
+        result['db_file'] = db_path
+        result['tables'] = tables
+        print(f"Created database at {db_path} with {len(tables)} tables: {tables}")
+
+    return result
 
 
 def main():
     # Process the files
     input_dir = '../data'
     output_dir = '../processed_data'
+    sql_db_dir = '../sql_databases'
 
     # Ensure the output directory exists
     os.makedirs(output_dir, exist_ok=True)
-    process_directory(input_dir, output_dir)
+
+    # Process directory and create SQL databases
+    result = process_directory(input_dir, output_dir, create_sql_databases=True, sql_db_dir=sql_db_dir)
 
     # Print the contents of the output directory
-    print("\nContents of the output directory:")
+    print("\nContents of the processed_data directory:")
     for f in os.listdir(output_dir):
         print(f"- {f}")
+
+    # Print information about the SQL database
+    if result['db_file']:
+        print(f"\nSQLite database created: {result['db_file']}")
+        print(f"Tables in database: {', '.join(result['tables'])}")
 
 if __name__ == "__main__":
     main()
