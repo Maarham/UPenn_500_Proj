@@ -1,3 +1,4 @@
 google-cloud-bigquery>=3.11.0
 pandas>=2.0.0
 pyarrow>=10.0.0
+flask>=2.3.0
