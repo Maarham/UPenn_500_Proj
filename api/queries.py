@@ -482,5 +482,95 @@ def getDangerAnalysis():
         return jsonify({"error": str(e)}), 500
 
 
+## Query 7: Top 10 Primary Fire Scenarios and Associated Primary Response Actions
+@app.route('/api/fire/primary_situation', methods=['GET'])
+def primary_situation_common_action():
+    '''
+    This API gets a json array of {primary_situation: (string), 
+                                    action_taken_primary: (string)} for fire incidents
+    '''
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = """
+    WITH top10_primarysituation AS (
+        SELECT "Primary Situation", Count(*) as count
+                FROM fire_incidents
+                GROUP BY "Primary Situation"
+                ORDER BY Count(*) DESC
+                LIMIT 10),
+        num_actions_per_situation AS	
+                    (SELECT "Primary Situation", "Action Taken Primary", count(*) as count,
+            (ROW_NUMBER() OVER(PARTITION BY "Primary Situation" ORDER BY count(*) DESC)) as row_num
+        FROM fire_incidents
+        WHERE "Primary Situation" IN (SELECT "Primary Situation" FROM top10_primarysituation)
+        GROUP BY "Primary Situation", "Action Taken Primary"
+        ORDER BY "Primary Situation", "Action Taken Primary", count(*) DESC)
+    SELECT N."Primary Situation" as primary_situation, N."Action Taken Primary" as action_taken_primary
+    FROM num_actions_per_situation N
+    JOIN top10_primarysituation T ON N."Primary Situation" = T."Primary Situation"
+    WHERE N.row_num = 1
+    ORDER BY T.count DESC;
+    
+    """
+    cursor.execute(query)
+    rows = cursor.fetchall()
+
+    if not rows:
+        return jsonify({})
+    result = [
+        {
+            "primary_situation": r[0],
+            "action_taken_primary": r[1]
+        }
+        for r in rows
+    ]
+    return jsonify(result)
+
+## Query 8: generates a listing of inspections that are not completed, showing the most recent inspection start dates first.
+@app.route(' /api/fire/incomplete_inspections', methods=['GET'])
+def incomplete_inspections():
+    '''
+    This api returns the incomplete inspections as an json array
+    with the following keys: inspection_number (string), inspection_start_date (date), inspection_end_date (date), inspection_status (string), inspection_type (string), inspection_type_description (string), address (string), zipcode (string)
+    Query Parameter:
+        limit(int, optional) (default:10)
+    '''
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    limit_number = request.args.get('limit', default=10, type=int)
+    query = f"""
+    SELECT "Inspection Number" as inspection_number, 
+        "Inspection Start Date" as inspection_start_date, "Inspection End Date" as inspection_end_date, 
+        "Inspection Status" as inspection_status, 
+        "Inspection Type" as inspection_type, 
+        "Inspection Type Description" as inspection_type_description, 
+        "Address" as address, "Zipcode" as zipcode
+    FROM  fire_inspections
+    WHERE inspection_number is NOT NULL and inspection_end_date is NULL
+    ORDER BY inspection_start_date DESC
+    LIMIT {limit_number};
+    """
+    try:
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        if not rows:
+            return jsonify({})
+        result = [
+            {
+                "inspection_number": r[0],
+                "inspection_start_date": r[1],
+                "inspection_end_date": r[2],
+                "inspection_status": r[3],
+                "inspection_type": r[4],
+                "inspection_type_description": r[5],
+                "address": r[6],
+                "zipcode": r[7]
+            }
+            for r in rows
+        ]
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)
