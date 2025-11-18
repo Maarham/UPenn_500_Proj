@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+import pandas as pd
 import sqlite3
 import os
 
@@ -572,5 +573,104 @@ def incomplete_inspections():
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+## Query 9:  Top Fire Neighborhoods
+@app.route('/api/fire/top-neighborhoods', methods=['GET'])
+def getTopFireNeighborhoods():
+    '''
+    Returns, for each of the latest M years (default: 3), 
+    the top N neighborhoods (default: 10) with the most fire incidents, plus each neighborhood’s percentage share within that year.
+    Query Parameter:
+        limit (integer) - Maximum number of neighborhoods per year to return (1 - 100, default: 10)
+        years (integer) - Number of recent years to include (1 - 5, default: 3)
+    Expected Behavior:
+        Case 1: No query params provided
+        Return top 10 neighborhoods for each of the latest 3 years.
+        Order by year (descending), then by total_fires (descending).
+        Include percentage of total fires for each neighborhood within its year.
+        Case 2: limit params provided
+        Return up to the specific number of neighborhoods per year.
+        Must be a positive integer between 1 and 100 (1 - 100).
+        Case 3: years params provided
+        Return data for the specified number of most recent years.
+        Must be a positive integer between 1 and 5 (1 - 5).
+        Case 4: Both limit and years params are provided
+        Apply both parameters to return top N neighborhoods for the latest M years.
+        Case 5: Invalid limit params (not a positive integer, < 1, or > 100)
+        Return with 400 status and error message: { "error": "Invalid limit parameter. Must be between 1 and 100" }.
+        Case 6: Invalid years params (not a positive integer, < 1, or > 5)
+        Return with 400 status and error message: { "error": "Invalid years parameter. Must be between 1 and 5" }.
+        Case 7: No fire incident data available
+        Return 200 status with empty data array and message in summary: {"data": [], "summary": {"message": "No fire incident data available"}}
+
+    '''
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    limit_number = request.args.get('limit', default=10, type=int)
+    if limit_number < 1 or limit_number > 100:
+        return jsonify({"error": "Invalid 'limit' parameter. Must be between 1 and 100."}), 400
+    year = request.args.get('years', default = 3, type = int)
+    if year < 1 or year > 5:
+        return jsonify({"error": "Invalid 'year' parameter. Must be between 1 and 5."}), 400
+    # Top 10 neighborhoods with the most fire incidents for each of the latest three years
+    query9 = f"""
+    WITH neighborhood_stats AS (
+    SELECT
+    CAST(strftime('%Y', "Incident Date") AS INTEGER) AS year,
+    "Analysis Neighborhood" AS neighborhood,
+    COUNT(*) AS total_fires,
+    ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM fire_incidents WHERE "Analysis Neighborhood" IS NOT NULL AND "Analysis Neighborhood" != ''), 2) AS percentage_of_total
+    FROM fire_incidents
+    WHERE "Analysis Neighborhood" IS NOT NULL
+    AND "Analysis Neighborhood" != ''
+    GROUP BY year, "Analysis Neighborhood"
+    ),
+    ranked AS (
+    SELECT
+    year,
+    ROW_NUMBER() OVER(PARTITION BY year ORDER BY total_fires DESC) AS rank,
+    neighborhood,
+    total_fires,
+    percentage_of_total
+    FROM neighborhood_stats
+    ORDER BY year DESC, total_fires DESC
+    )
+    SELECT
+    year,
+    rank,
+    neighborhood,
+    total_fires,
+    percentage_of_total
+    FROM ranked
+    WHERE year >= (SELECT MAX(year) FROM neighborhood_stats) - {year-1}
+    AND rank <= {limit}
+    ORDER BY year DESC, rank ASC;
+    """
+    try:
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        if not rows:
+            return jsonify( {"data": [], "summary": {"message": "No fire incident data available"}}), 200
+        data = [
+            {
+            "year": r[0],
+            "rank": r[1],
+            "neighborhood": r[2],
+            "total_fires": r[3],
+            'percentage_of_total': r[4]
+            }
+            for r in rows
+        ]
+        result = {}
+        result["data"] = data
+        result["summary"] = {"years_analyzed": list(range(rows[-1][0], rows[0][0]+1)),
+                            "limit_per_year": limit_number,
+                            "years_requested": year,
+                            "total_records": len(rows)}
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+## Query 10
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)
