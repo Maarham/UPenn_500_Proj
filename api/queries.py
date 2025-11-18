@@ -482,7 +482,39 @@ def getDangerAnalysis():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+## Query 6: Top Crime Categories
+@app.route('/stats/top_crime_categories', methods=['GET'])
+def top_crime_categories():
+    '''
+    Returns the top 10 most frequently reported crime categories from the SFPD incidents dataset as a single JSON object
+    Query Parameters:
+        limit(int)* - the number of categories to return. (default: 10)
+    '''
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    limit_number = request.args.get('limit', default=10, type=int)
+    if limit_number < 1 or limit_number > 100:
+        return jsonify({"error": "Invalid 'limit' parameter. Must be between 1 and 100."}), 400
+    query = f"""
+    SELECT category, COUNT(*) AS cnt
+    FROM sfpd_incidents
+    GROUP BY category
+    ORDER BY cnt DESC
+    LIMIT {limit_number};
+    """
+    try:
+        cursor.execute(query)
+        rows = cursor.fetchall()
 
+        if not rows:
+            return jsonify({})
+        data = dict(rows)
+        result = {}
+        result["top_crime_categories"] = data
+        result["total_categories_returned"] = len(rows)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 ## Query 7: Top 10 Primary Fire Scenarios and Associated Primary Response Actions
 @app.route('/api/fire/primary_situation', methods=['GET'])
 def primary_situation_common_action():
@@ -539,6 +571,8 @@ def incomplete_inspections():
     conn = get_db_connection()
     cursor = conn.cursor()
     limit_number = request.args.get('limit', default=10, type=int)
+    if limit_number < 1 or limit_number > 100:
+        return jsonify({"error": "Invalid 'limit' parameter. Must be between 1 and 100."}), 400
     query = f"""
     SELECT "Inspection Number" as inspection_number, 
         "Inspection Start Date" as inspection_start_date, "Inspection End Date" as inspection_end_date, 
