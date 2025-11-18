@@ -528,7 +528,7 @@ def primary_situation_common_action():
     return jsonify(result)
 
 ## Query 8: generates a listing of inspections that are not completed, showing the most recent inspection start dates first.
-@app.route(' /api/fire/incomplete_inspections', methods=['GET'])
+@app.route('/api/fire/incomplete_inspections', methods=['GET'])
 def incomplete_inspections():
     '''
     This api returns the incomplete inspections as an json array
