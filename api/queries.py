@@ -482,6 +482,143 @@ def getDangerAnalysis():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+# Query 4: Incident Type Breakdown
+@app.route('/stats/incident_type_breakdown', methods=['GET'])
+def incident_type_breakdown():
+    """
+    Returns the total and percentage of incidents for each type (crime, fire).
+    Response (JSON):
+    {
+        "crime": {"total": int, "percentage": float},
+        "fire": {"total": int, "percentage": float},
+        "total_incidents": int
+    }
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Query to get crime count
+        crime_query = """
+            SELECT COUNT(*) as count
+            FROM sfpd_incidents
+            WHERE timestamp IS NOT NULL
+        """
+        cursor.execute(crime_query)
+        crime_count = cursor.fetchone()['count']
+
+        # Query to get fire count
+        fire_query = """
+            SELECT COUNT(*) as count
+            FROM fire_incidents
+            WHERE "Incident Date" IS NOT NULL
+        """
+        cursor.execute(fire_query)
+        fire_count = cursor.fetchone()['count']
+
+        conn.close()
+
+        # Calculate total
+        total_incidents = crime_count + fire_count
+
+        # Build response
+        response = {}
+
+        if crime_count > 0:
+            response['crime'] = {
+                'total': crime_count,
+                'percentage': round((crime_count / total_incidents) * 100, 2) if total_incidents > 0 else 0
+            }
+
+        if fire_count > 0:
+            response['fire'] = {
+                'total': fire_count,
+                'percentage': round((fire_count / total_incidents) * 100, 2) if total_incidents > 0 else 0
+            }
+
+        response['total_incidents'] = total_incidents
+
+        return jsonify(response)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# Query 5: Monthly Incident Aggregation
+@app.route('/stats/monthly_incidents', methods=['GET'])
+def monthly_incidents():
+    """
+    Aggregates monthly counts of crime and fire incidents across years.
+    Response (JSON):
+    {
+        "YYYY-MM": {
+            "crime_cnt": int,
+            "fire_cnt": int,
+            "total_incidents": int
+        },
+        ...
+    }
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Query to aggregate by month
+        query = """
+            WITH crime AS (
+                SELECT
+                    strftime('%Y-%m', timestamp) AS month,
+                    COUNT(DISTINCT unique_key) AS cnt
+                FROM sfpd_incidents
+                WHERE timestamp IS NOT NULL
+                GROUP BY 1
+            ),
+            fire AS (
+                SELECT
+                    strftime('%Y-%m', "Incident Date") AS month,
+                    COUNT(*) AS cnt
+                FROM fire_incidents
+                WHERE "Incident Date" IS NOT NULL
+                GROUP BY 1
+            ),
+            months AS (
+                SELECT month FROM crime
+                UNION
+                SELECT month FROM fire
+            )
+            SELECT
+                m.month,
+                COALESCE(c.cnt, 0) AS crime_cnt,
+                COALESCE(f.cnt, 0) AS fire_cnt,
+                COALESCE(c.cnt, 0) + COALESCE(f.cnt, 0) AS total_incidents
+            FROM months m
+            LEFT JOIN crime c ON c.month = m.month
+            LEFT JOIN fire f ON f.month = m.month
+            ORDER BY m.month
+        """
+
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        # Build response as nested object with month as key
+        response = {}
+        for row in rows:
+            month = row['month']
+            response[month] = {
+                'crime_cnt': row['crime_cnt'],
+                'fire_cnt': row['fire_cnt'],
+                'total_incidents': row['total_incidents']
+            }
+
+        conn.close()
+
+        return jsonify(response)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 ## Query 6: Top Crime Categories
 @app.route('/stats/top_crime_categories', methods=['GET'])
 def top_crime_categories():
