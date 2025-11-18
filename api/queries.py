@@ -671,6 +671,88 @@ def getTopFireNeighborhoods():
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-## Query 10
+## Query 10: SFFD Response Time by Call Type
+@app.route('/api/sffd/response-times', methods=['GET'])
+def getResponseTimes():
+    '''
+    Returns the average, minimum, and maximum response time (in minutes) for each SFFD call type, 
+    sorted by average response time descending. 
+    Response times are calculated in minutes from received timestamp to on-scene timestamp. Only includes call types with at least 5 incidents.
+    Query Parameter(s):
+        limit (integer) - Maximum number of call types to return (1 - 100,  default: 50)
+        sort_by (string) - Sort field: 'avg_response', 'min_response', 'max_response' (default: 'avg_response')
+        order (string) - Sort direction: 'ASC' or 'DESC' (default: 'DESC')
+    '''
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    limit_number = request.args.get('limit', default=50, type=int)
+    sort_by = request.args.get('sort_by', default = 'avg_response', type = str)
+    order = request.args.get('order', default = 'DESC', type = 'str')
+    if limit_number < 1 or limit_number > 100:
+        return jsonify({"error": "Invalid 'limit' parameter. Must be between 1 and 100."}), 400
+    if sort_by not in ['avg_response', 'min_response', 'max_response']:
+        return jsonify({"error": "Invalid 'sort_by' parameter. Must be either of these options: ['avg_response', 'min_response', 'max_response']."}), 400
+    if order not in ['ASC', 'DESC']:
+        return jsonify({"error": "Invalid 'order' parameter. Must be either of these options: ['ASC', 'DESC']."}), 400
+    sort_by = sort_by + '_minutes'
+    query = f"""
+        WITH stats AS (
+        SELECT
+        call_type,
+        COUNT(*) AS total_calls,
+        ROUND(AVG((julianday(on_scene_timestamp) - julianday(received_timestamp)) * 1440), 2)
+            AS avg_response_minutes,
+        ROUND(MIN((julianday(on_scene_timestamp) - julianday(received_timestamp)) * 1440), 2)
+            AS min_response_minutes,
+        ROUND(MAX((julianday(on_scene_timestamp) - julianday(received_timestamp)) * 1440), 2)
+            AS max_response_minutes
+        FROM sffd_service_calls
+        WHERE
+        call_type IS NOT NULL
+        AND call_type != ''
+        AND received_timestamp IS NOT NULL
+        AND on_scene_timestamp IS NOT NULL
+        AND on_scene_timestamp >= received_timestamp
+        GROUP BY call_type
+        HAVING COUNT(*) >= 5
+        )
+        SELECT
+        ROW_NUMBER() OVER (ORDER BY {sort_by} {order}) AS rank,
+        call_type,
+        total_calls,
+        avg_response_minutes,
+        min_response_minutes,
+        max_response_minutes
+        FROM stats
+        ORDER BY {sort_by} {order}
+        LIMIT {limit_number};
+    """
+
+    try:
+        cursor.execute(query)
+        rows = cursor.fetchall()
+
+        if not rows:
+            return {"data": [], "summary": {"message": "No call types found with at least 5 incidents"}}, 200
+        data = [
+            {
+            "rank": r[0],
+            "call_type": r[1],
+            "total_calls": r[2],
+            "avg_response_minutes": r[3],
+            'min_response_minutes': r[4],
+            "max_response_minutes": r[5]
+            }
+            for r in rows
+        ]
+        result = {}
+        result["data"] = data
+        result["summary"] = {"limit": limit_number,
+                            "sort_by": sort_by,
+                            "order": order,
+                            "total_records": len(rows)}
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)
