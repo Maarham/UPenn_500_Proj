@@ -83,10 +83,12 @@ function Query8() {
                         <tr>
                             <th>Inspection Number</th>
                             <th>Start Date</th>
+                            <th>End Date</th>
                             <th>Status</th>
                             <th>Type</th>
                             <th>Type Description</th>
                             <th>Address</th>
+                            <th>Zipcode</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -94,11 +96,12 @@ function Query8() {
                             <tr key={row.inspection_number}>
                                 <td>{row.inspection_number}</td>
                                 <td>{row.inspection_start_date}</td>
+                                <td>{row.inspection_end_date || "Pending"}</td>
                                 <td>{row.inspection_status}</td>
                                 <td>{row.inspection_type}</td>
                                 <td>{row.inspection_type_description}</td>
                                 <td>{row.address}</td>
-                                
+                                <td>{row.zipcode || "N/A"}</td>
                             </tr>
                         ))}
                     </tbody>
