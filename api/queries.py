@@ -784,7 +784,7 @@ def getTopFireNeighborhoods():
     if year < 1 or year > 5:
         return jsonify({"error": "Invalid 'year' parameter. Must be between 1 and 5."}), 400
     # Top 10 neighborhoods with the most fire incidents for each of the latest three years
-    query9 = f"""
+    query = f"""
     WITH neighborhood_stats AS (
     SELECT
     CAST(strftime('%Y', "Incident Date") AS INTEGER) AS year,
@@ -814,7 +814,7 @@ def getTopFireNeighborhoods():
     percentage_of_total
     FROM ranked
     WHERE year >= (SELECT MAX(year) FROM neighborhood_stats) - {year-1}
-    AND rank <= {limit}
+    AND rank <= {limit_number}
     ORDER BY year DESC, rank ASC;
     """
     try:
@@ -842,6 +842,8 @@ def getTopFireNeighborhoods():
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
 ## Query 10: SFFD Response Time by Call Type
 @app.route('/api/sffd/response-times', methods=['GET'])
 def getResponseTimes():
@@ -858,7 +860,7 @@ def getResponseTimes():
     cursor = conn.cursor()
     limit_number = request.args.get('limit', default=50, type=int)
     sort_by = request.args.get('sort_by', default = 'avg_response', type = str)
-    order = request.args.get('order', default = 'DESC', type = 'str')
+    order = request.args.get('order', default = 'DESC', type = str)
     if limit_number < 1 or limit_number > 100:
         return jsonify({"error": "Invalid 'limit' parameter. Must be between 1 and 100."}), 400
     if sort_by not in ['avg_response', 'min_response', 'max_response']:
@@ -868,34 +870,40 @@ def getResponseTimes():
     sort_by = sort_by + '_minutes'
     query = f"""
         WITH stats AS (
-        SELECT
-        call_type,
-        COUNT(*) AS total_calls,
-        ROUND(AVG((julianday(on_scene_timestamp) - julianday(received_timestamp)) * 1440), 2)
-            AS avg_response_minutes,
-        ROUND(MIN((julianday(on_scene_timestamp) - julianday(received_timestamp)) * 1440), 2)
-            AS min_response_minutes,
-        ROUND(MAX((julianday(on_scene_timestamp) - julianday(received_timestamp)) * 1440), 2)
-            AS max_response_minutes
-        FROM sffd_service_calls
-        WHERE
-        call_type IS NOT NULL
-        AND call_type != ''
-        AND received_timestamp IS NOT NULL
-        AND on_scene_timestamp IS NOT NULL
-        AND on_scene_timestamp >= received_timestamp
-        GROUP BY call_type
-        HAVING COUNT(*) >= 5
+            SELECT
+                call_type,
+                COUNT(*) AS total_calls,
+                ROUND(AVG((julianday(on_scene_timestamp) - julianday(received_timestamp)) * 1440), 2)
+                    AS avg_response_minutes,
+                ROUND(MIN((julianday(on_scene_timestamp) - julianday(received_timestamp)) * 1440), 2)
+                    AS min_response_minutes,
+                ROUND(MAX((julianday(on_scene_timestamp) - julianday(received_timestamp)) * 1440), 2)
+                    AS max_response_minutes
+            FROM sffd_service_calls
+            WHERE
+                call_type IS NOT NULL
+                AND call_type != ''
+                AND received_timestamp IS NOT NULL
+                AND on_scene_timestamp IS NOT NULL
+                AND on_scene_timestamp >= received_timestamp
+            GROUP BY call_type
+            HAVING COUNT(*) >= 5
+        ),
+        sorted AS (
+            SELECT
+                *,
+                ROW_NUMBER() OVER (ORDER BY {sort_by} {order}) AS rank
+            FROM stats
         )
         SELECT
-        ROW_NUMBER() OVER (ORDER BY {sort_by} {order}) AS rank,
-        call_type,
-        total_calls,
-        avg_response_minutes,
-        min_response_minutes,
-        max_response_minutes
-        FROM stats
-        ORDER BY {sort_by} {order}
+            rank,
+            call_type,
+            total_calls,
+            avg_response_minutes,
+            min_response_minutes,
+            max_response_minutes
+        FROM sorted
+        ORDER BY rank
         LIMIT {limit_number};
     """
 
@@ -925,5 +933,6 @@ def getResponseTimes():
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)
