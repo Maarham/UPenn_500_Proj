@@ -13,6 +13,7 @@ import Query6 from "./Query6";
 import Query7 from "./Query7";
 import Query8 from "./Query8";
 import Query9 from "./Query9";
+import Query10 from "./Query10";
 
 
 
@@ -35,7 +36,7 @@ function App() {
         <button onClick={() => setPage("q7")}>Query 7</button>
         <button onClick={() => setPage("q8")}>Query 8</button>
         <button onClick={() => setPage("q9")}>Query 9</button>
-
+        <button onClick={() => setPage("q10")}>Query 10</button>
 
       </div>
 
@@ -49,6 +50,7 @@ function App() {
       {page === "q7" && <Query7 />}
       {page === "q8" && <Query8 />}
       {page === "q9" && <Query9 />}
+      {page === "q10" && <Query10 />}
     </div>
   );
 }
