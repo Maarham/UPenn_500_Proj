@@ -50,6 +50,11 @@ function Query2() {
     <div style={{ padding: "20px", maxWidth: "900px" }}>
       <h2>Query 2 — Top Neighborhoods by Incident Count</h2>
 
+      <p style={{ maxWidth: "900px" }}>
+        Returns a ranked list of neighborhoods by total incident count, including
+        distinct types and sources.
+      </p>
+
       {/* Filter controls */}
       <div style={{ marginBottom: "15px" }}>
         {/* Limit input */}

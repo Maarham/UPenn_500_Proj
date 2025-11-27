@@ -58,6 +58,12 @@ function Query1() {
     <div style={{ padding: "20px" }}>
       <h2>Query 1 — All Incidents by Time</h2>
 
+      <p style={{ maxWidth: "900px" }}>
+        Returns all incidents from multiple data sources (311, fire, safety
+        complaints, violations, service calls, and police) combined and ordered
+        by time.
+      </p>
+
       {/* Filter controls */}
       <div style={{ marginBottom: "20px" }}>
         {/* Limit input */}
