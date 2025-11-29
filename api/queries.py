@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import pandas as pd
 import sqlite3
+import datetime
 import os
 
 app = Flask(__name__)
@@ -925,5 +926,257 @@ def getResponseTimes():
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+### INCIDENT REPORT PAGE API FOR CREATING INCIDENT INTO DATABASES
+## CREATE 311 SERVICE REQUEST
+@app.route('/api/311-requests', methods = ['POST'])
+def create_311_service_request():
+    """
+    columns in the "311_service_requests" table: ['unique_key', 'created_date', 'closed_date', 
+    'resolution_action_updated_date', 'status', 'status_notes', 'agency_name', 'category', 
+    'complaint_type', 'descriptor', 'incident_address', 'supervisor_district', 'neighborhood', 
+    'location', 'source', 'media_url', 'latitude', 'longitude', 'police_district']
+
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    ## auto-generated values to enter
+    created_timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S+00:00')
+    status = "Open"
+    source = 'Web'
+    ## generating unique key
+    cursor.execute('''SELECT DISTINCT unique_key FROM "311_service_requests" ''')
+    existing_keys = [row[0] for row in cursor.fetchall()]
+    existing_keys_set = set(existing_keys)
+    def generate_unique_key():
+        k = 0
+        default_length_of_digits = 10
+        while k < 10:
+            new_key = ''.join(random.choices(string.digits, k=default_length_of_digits))
+            
+            # Check if it doesn't exist
+            if new_key not in existing_keys_set:
+                return new_key
+            k +=1
+    unique_key = generate_unique_key()
+
+    ## get data
+    data = request.get_json()
+    required_fields = ["category", "complaint_type", "descriptor", "incident_address", "neighborhood"]
+    for field in required_fields:
+        if field not in data or not data.get(field):
+            return jsonify({"error": f"Missing required field '{field}'"}), 400
+    try:
+        query = """
+        INSERT INTO "311_service_requests" (
+            unique_key, created_date, closed_date,
+            resolution_action_updated_date, status, status_notes,
+            agency_name, category, complaint_type, descriptor,
+            incident_address, supervisor_district, neighborhood,
+            location, source, media_url, latitude, longitude, police_district
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
+                %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        RETURNING *;
+        """
+        values = (
+            unique_key,
+            created_timestamp,
+            None,
+            status,
+            None,
+            None,
+            data.get('category'), 
+            data.get('complaint_type'),
+            data.get('descriptor'), 
+            data.get('incident_address'),
+            None,
+            data.get('neighborhood'),
+            None, 
+            source,
+            None,
+            None,
+            None,
+            None
+        )
+        cursor.execute(query, values)
+        result = cursor.fetchone()
+        conn.commit()
+        cursor.close()
+        return jsonify({
+            'success': True,
+            'message': '311 service request created successfully',
+            'data': dict(result)
+        }), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+
+## add sfpd incident
+@app.route('/api/sfpd_incidents', methods = ['POST'])
+def create_sfpd_incident():
+    """
+    columns in the "sfpd_incidents" table: 
+    ['unique_key', 'category', 'descript', 'dayofweek', 
+    'pddistrict', 'resolution', 'address', 'longitude', 
+    'latitude', 'location', 'pdid', 'timestamp']
+
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+
+    ## auto-generated values to enter
+    created_timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S+00:00')
+    status = "Open"
+    source = 'Web'
+    ## generating unique key
+    cursor.execute('''SELECT DISTINCT unique_key FROM sfpd_incidents ''')
+    existing_keys = [row[0] for row in cursor.fetchall()]
+    existing_keys_set = set(existing_keys)
+    def generate_unique_key():
+        k = 0
+        default_length_of_digits = 10
+        while k < 10:
+            new_key = ''.join(random.choices(string.digits, k=default_length_of_digits))
+            
+            # Check if it doesn't exist
+            if new_key not in existing_keys_set:
+                return new_key
+            k +=1
+    unique_key = generate_unique_key()
+
+    ## get data
+    data = request.get_json()
+    required_fields = ["category", "descript", "address"]
+    for field in required_fields:
+        if field not in data or not data.get(field):
+            return jsonify({"error": f"Missing required field '{field}'"}), 400
+    try:
+        query = """
+            INSERT INTO sfpd_incidents (
+                unique_key, category, descript, dayofweek, pddistrict,
+                resolution, address, longitude, latitude, location, pdid, timestamp
+            )
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            RETURNING *;
+        """
+
+        values = (
+            unique_key,
+            data.get("category"),
+            data.get("descript"),
+            data.get("dayofweek"),
+            data.get("pddistrict"),
+            data.get("resolution"),
+            data.get("address"),
+            data.get("longitude"),
+            data.get("latitude"),
+            data.get("location"),
+            data.get("pdid"),
+            timestamp
+        )
+        cursor.execute(query, values)
+        result = cursor.fetchone()
+        conn.commit()
+        cursor.close()
+        return jsonify({
+            'success': True,
+            'message': 'SFPD incident created successfully',
+            'data': dict(result)
+        }), 201
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/fire-incidents', methods=['POST'])
+def create_fire_incident():
+    data = request.get_json()
+
+    required_fields = ["Address", "Incident Date", "Primary Situation", "Analysis Neighborhood"]
+    for field in required_fields:
+        if field not in data or not data.get(field):
+            return jsonify({"error": f"Missing required field '{field}'"}), 400
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    ## generating unique key
+    cursor.execute('''SELECT DISTINCT unique_key FROM fire_incidents ''')
+    existing_keys = [row[0] for row in cursor.fetchall()]
+    existing_keys_set = set(existing_keys)
+    def generate_unique_key():
+        k = 0
+        default_length_of_digits = 10
+        while k < 10:
+            new_key = ''.join(random.choices(string.digits, k=default_length_of_digits))
+            
+            # Check if it doesn't exist
+            if new_key not in existing_keys_set:
+                return new_key
+            k +=1
+    incident_number = generate_unique_key()
+
+    query = """
+        INSERT INTO fire_incidents (
+            "Incident Number", "Exposure Number", "ID", "Address",
+            "Incident Date", "Call Number", "Alarm DtTm", "Arrival DtTm", "Close DtTm",
+            "City", "ZIP Code", "Suppression Units", "Suppression Personnel",
+            "EMS Units", "EMS Personnel", "Other Units", "Other Personnel",
+            "Fire Fatalities", "Fire Injuries", "Civilian Fatalities",
+            "Civilian Injuries", "Number of Alarms", "Primary Situation",
+            "Mutual Aid", "Action Taken Primary", "Action Taken Secondary",
+            "Property Use", "Supervisor District", "Analysis Neighborhood"
+        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                  %s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        RETURNING *;
+    """
+
+    values = (
+        incident_number,
+        data.get("Exposure Number"),
+        data.get("ID"),
+        data.get("Address"),
+        data.get("Incident Date"),
+        data.get("Call Number"),
+        data.get("Alarm DtTm"),
+        data.get("Arrival DtTm"),
+        data.get("Close DtTm"),
+        data.get("City"),
+        data.get("ZIP Code"),
+        data.get("Suppression Units"),
+        data.get("Suppression Personnel"),
+        data.get("EMS Units"),
+        data.get("EMS Personnel"),
+        data.get("Other Units"),
+        data.get("Other Personnel"),
+        data.get("Fire Fatalities"),
+        data.get("Fire Injuries"),
+        data.get("Civilian Fatalities"),
+        data.get("Civilian Injuries"),
+        data.get("Number of Alarms"),
+        data.get("Primary Situation"),
+        data.get("Mutual Aid"),
+        data.get("Action Taken Primary"),
+        data.get("Action Taken Secondary"),
+        data.get("Property Use"),
+        data.get("Supervisor District"),
+        data.get("Analysis Neighborhood")
+    )
+
+    try:
+        cursor.execute(query, values)
+        result = cursor.fetchone()
+        conn.commit()
+        cursor.close()
+        return jsonify({"success": True, 
+                    "message": "Fire Incident created successfully",
+                 "data": dict(result)}), 201
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)
