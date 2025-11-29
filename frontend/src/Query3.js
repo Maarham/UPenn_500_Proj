@@ -56,6 +56,10 @@ function Query3() {
     <div style={{ padding: "20px" }}>
       <h2>Query 3 — Danger Analysis</h2>
 
+      <p style={{ maxWidth: "900px" }}>
+        Returns analysis of which neighborhoods are most dangerous at different times of day and day types.
+      </p>
+
       {/* Filter controls */}
       <div style={{ marginBottom: "20px" }}>
         {/* Neighborhood input */}
