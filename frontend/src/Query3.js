@@ -6,7 +6,6 @@
 // Optional filters: neighborhood, time_period, day_type, and top_n.
 
 import React, { useState } from "react";
-import { API_BASE_URL } from "./config";
 
 function Query3() {
   // State variables for data, filters, UI states
@@ -25,7 +24,7 @@ function Query3() {
 
     try {
       // Build API URL dynamically based on filters
-      let url = `${API_BASE_URL}/api/neighborhoods/danger-analysis?top_n=${topN}`;
+      let url = `/api/neighborhoods/danger-analysis?top_n=${topN}`;
 
       if (neighborhood !== "") url += `&neighborhood=${neighborhood}`;
       if (timePeriod !== "") url += `&time_period=${timePeriod}`;

@@ -21,9 +21,6 @@ import {
   inputStyle,
 } from "./utils";
 
-// API configuration
-import { API_BASE_URL } from "./config";
-
 // Map and filter components
 import { SpatialExplorer, FilterField, SourceSelector } from "./MapView";
 
@@ -92,7 +89,7 @@ function App() {
         }
 
         // Call API
-        const response = await fetch(`${API_BASE_URL}/api/incidents/timeline?${params.toString()}`, {
+        const response = await fetch(`/api/incidents/timeline?${params.toString()}`, {
           signal: controller.signal,
         });
         const json = await response.json();

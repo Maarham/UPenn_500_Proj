@@ -4,7 +4,6 @@
 // It retrieves monthly crime and fire incident counts (plus totals) per YYYY-MM.
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { API_BASE_URL } from "./config";
 
 function Query5() {
   // State for API response, loading indicator, and potential error
@@ -20,7 +19,7 @@ function Query5() {
     setError("");
 
     try {
-      const res = await fetch(`${API_BASE_URL}/stats/monthly_incidents`);
+      const res = await fetch("/stats/monthly_incidents");
       const json = await res.json();
 
       if (!res.ok) {

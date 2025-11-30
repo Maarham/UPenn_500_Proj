@@ -5,7 +5,6 @@
 
 
 import React, { useState, useEffect, useCallback } from "react";
-import { API_BASE_URL } from "./config";
 
 
 function Query10() {
@@ -34,7 +33,7 @@ function Query10() {
 
 
    try {
-     const url = `${API_BASE_URL}/api/sffd/response-times?limit=${limit}&sort_by=${sortBy}&order=${order}`;
+     const url = `/api/sffd/response-times?limit=${limit}&sort_by=${sortBy}&order=${order}`;
 
 
      const res = await fetch(url);
