@@ -91,8 +91,8 @@ function Query9() {
   };
 
   return (
-    <div style={{ padding: "20px", maxWidth: "900px" }}>
-      <h2>Query 9 — Top Fire Neighborhoods by Year</h2>
+    <div>
+      <h2 style={{ marginTop: 0 }}>Query 9 — Top Fire Neighborhoods by Year</h2>
       <p>
         For each of the latest M years, this view shows the top N neighborhoods
         with the highest number of fire incidents, plus each neighborhood’s
@@ -142,35 +142,95 @@ function Query9() {
         <div>No data returned for the given parameters.</div>
       )}
 
-      {/* Main table */}
-      {rows.length > 0 && (
-        <table
-          border="1"
-          cellPadding="8"
-          style={{ borderCollapse: "collapse", width: "100%" }}
-        >
-          <thead>
-            <tr>
-              <th>Year</th>
-              <th>Rank</th>
-              <th>Neighborhood</th>
-              <th>Total Fires</th>
-              <th>% of All Fires</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, idx) => (
-              <tr key={idx}>
-                <td>{row.year}</td>
-                <td>{row.rank}</td>
-                <td>{row.neighborhood}</td>
-                <td>{row.total_fires}</td>
-                <td>{row.percentage_of_total}%</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      {/* Main visualization */}
+      {rows.length > 0 && (() => {
+        // Group by year
+        const groupedByYear = rows.reduce((acc, row) => {
+          if (!acc[row.year]) acc[row.year] = [];
+          acc[row.year].push(row);
+          return acc;
+        }, {});
+        
+        const years = Object.keys(groupedByYear).sort();
+        const maxFires = Math.max(...rows.map(r => r.total_fires));
+        
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            {years.map((year, yearIdx) => {
+              const yearData = groupedByYear[year];
+              const colors = ["#ef4444", "#f97316", "#f59e0b", "#10b981", "#14b8a6", "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7", "#ec4899"];
+              
+              return (
+                <div key={year} style={{ border: "1px solid #e5e7eb", borderRadius: "8px", padding: "16px", background: "white" }}>
+                  <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: 700, color: "#111827" }}>
+                    {year}
+                  </h3>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {yearData.map((row, idx) => {
+                      const barWidth = (row.total_fires / maxFires) * 100;
+                      
+                      return (
+                        <div key={idx} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                          <div style={{ 
+                            minWidth: "30px", 
+                            fontSize: "0.75rem", 
+                            fontWeight: 600,
+                            color: "#6b7280",
+                            textAlign: "center"
+                          }}>
+                            #{row.rank}
+                          </div>
+                          <div style={{ 
+                            minWidth: "140px", 
+                            fontSize: "0.85rem", 
+                            fontWeight: 500,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap"
+                          }}>
+                            {row.neighborhood}
+                          </div>
+                          <div style={{ flex: 1, position: "relative", height: "28px" }}>
+                            <div
+                              style={{
+                                width: `${barWidth}%`,
+                                height: "100%",
+                                background: colors[idx % colors.length],
+                                borderRadius: "4px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                padding: "0 8px",
+                              }}
+                            >
+                              <span style={{ 
+                                color: "white", 
+                                fontSize: "0.75rem", 
+                                fontWeight: 600,
+                                textShadow: "0 1px 2px rgba(0,0,0,0.3)"
+                              }}>
+                                {row.total_fires.toLocaleString()}
+                              </span>
+                              <span style={{ 
+                                color: "white", 
+                                fontSize: "0.7rem", 
+                                fontWeight: 500,
+                                textShadow: "0 1px 2px rgba(0,0,0,0.3)"
+                              }}>
+                                {row.percentage_of_total}%
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
 
       {/* Summary section */}
       {renderSummary()}

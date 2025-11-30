@@ -49,8 +49,8 @@ function Query6() {
         loadData();
     },[loadData]);
     return (
-        <div style={{padding:"20px",maxWidth:"600px"}}>
-            <h2>Query 6 - Top Crime Categories</h2>
+        <div>
+            <h2 style={{ marginTop: 0 }}>Query 6 - Top Crime Categories</h2>
             <p>
                 view the top crime categories by incident count.
             </p>
@@ -74,30 +74,61 @@ function Query6() {
             {!loading && categories.length === 0 && !error && 
             (<div>No data available</div>)}
 
-            {categories.length > 0 &&(
-                <table border="1" 
-                cellPadding="8" 
-                style={{borderCollapse:"collapse",width:"100%"}}
-                >
-                    <thead>
-                        <tr>
-                            <th>Top Crime Categories</th>
-                            <th>Incident Count</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {categories.map((row)=>(
-                            <tr key={row.name}>
-                                <td>{row.name}</td>
-                                <td>{row.count}</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            )}
-            {categories.length===0 && (
-                <div style={{marginTop:"12px"}}>
-                    Categories returned: {totalReturned}
+            {categories.length > 0 && (() => {
+                const maxCount = Math.max(...categories.map(c => c.count));
+                return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                        {categories.map((row, idx) => {
+                            const barWidth = (row.count / maxCount) * 100;
+                            const colors = [
+                                "#ef4444", "#f97316", "#f59e0b", "#10b981", "#14b8a6",
+                                "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7", "#ec4899"
+                            ];
+                            return (
+                                <div key={row.name} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                    <div style={{ 
+                                        minWidth: "200px", 
+                                        fontSize: "0.85rem", 
+                                        fontWeight: 500,
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap"
+                                    }}>
+                                        {row.name}
+                                    </div>
+                                    <div style={{ flex: 1, position: "relative", height: "32px" }}>
+                                        <div
+                                            style={{
+                                                width: `${barWidth}%`,
+                                                height: "100%",
+                                                background: colors[idx % colors.length],
+                                                borderRadius: "4px",
+                                                transition: "width 0.3s ease",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "flex-end",
+                                                paddingRight: "8px",
+                                            }}
+                                        >
+                                            <span style={{ 
+                                                color: "white", 
+                                                fontSize: "0.8rem", 
+                                                fontWeight: 600,
+                                                textShadow: "0 1px 2px rgba(0,0,0,0.3)"
+                                            }}>
+                                                {row.count.toLocaleString()}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                );
+            })()}
+            {categories.length > 0 && (
+                <div style={{marginTop:"16px", fontSize: "0.85rem", color: "#6b7280"}}>
+                    <strong>Total Categories:</strong> {totalReturned}
                 </div>
             )}
         </div>

@@ -38,8 +38,8 @@ function Query7() {
   }, [loadData]);
 
   return (
-    <div style={{ padding: "20px", maxWidth: "800px" }}>
-      <h2>
+    <div>
+      <h2 style={{ marginTop: 0 }}>
         Query 7 — Top 10 Primary Fire Scenarios and Associated Primary Response Actions
       </h2>
       <p>

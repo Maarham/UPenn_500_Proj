@@ -44,8 +44,8 @@ function Query8() {
     }, [loadData]);
 
     return (
-        <div style={{ padding: "20px", maxWidth: "800px" }}>
-            <h2>Query 8 - Incomplete Fire Inspections</h2>
+        <div>
+            <h2 style={{ marginTop: 0 }}>Query 8 - Incomplete Fire Inspections</h2>
             <p>
                 Display the top incomplete fire inspections by inspection date.
             </p>

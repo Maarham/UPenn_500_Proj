@@ -48,8 +48,8 @@ function Query4() {
           }));
 
   return (
-    <div style={{ padding: "20px", maxWidth: "600px" }}>
-      <h2>Query 4 - Incident Type Breakdown</h2>
+    <div>
+      <h2 style={{ marginTop: 0 }}>Query 4 - Incident Type Breakdown</h2>
       <p>
         Fetch the crime vs. fire incident split using the aggregated statistics
         endpoint.
@@ -59,41 +59,80 @@ function Query4() {
       {loading && <div>Loading...</div>}
       {error && <div style={{ color: "red" }}>Error: {error}</div>}
 
-      {/* Result table */}
+      {/* Result visualization */}
       {stats && (
         <div>
-          <table
-            border="1"
-            cellPadding="8"
-            style={{ borderCollapse: "collapse", width: "100%" }}
-          >
-            <thead>
-              <tr>
-                <th>Incident Type</th>
-                <th>Total Incidents</th>
-                <th>Percentage</th>
-              </tr>
-            </thead>
-            <tbody>
-              {breakdownRows.length === 0 ? (
-                <tr>
-                  <td colSpan="3" style={{ textAlign: "center" }}>
-                    No data available
-                  </td>
-                </tr>
-              ) : (
-                breakdownRows.map((row) => (
-                  <tr key={row.label}>
-                    <td>{row.label}</td>
-                    <td>{row.total}</td>
-                    <td>{row.percentage}%</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-          <div style={{ marginTop: "10px", fontWeight: "bold" }}>
-            Total Incidents: {stats?.total_incidents ?? 0}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "40px", flexWrap: "wrap" }}>
+            {/* Pie Chart */}
+            <div style={{ position: "relative", width: "200px", height: "200px" }}>
+              <svg width="200" height="200" viewBox="0 0 200 200">
+                {breakdownRows.length > 0 && (() => {
+                  const colors = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b"];
+                  let currentAngle = 0;
+                  
+                  return breakdownRows.map((row, idx) => {
+                    const percentage = row.percentage;
+                    const angle = (percentage / 100) * 360;
+                    const startAngle = currentAngle;
+                    const endAngle = currentAngle + angle;
+                    
+                    const startRad = (startAngle - 90) * (Math.PI / 180);
+                    const endRad = (endAngle - 90) * (Math.PI / 180);
+                    
+                    const x1 = 100 + 80 * Math.cos(startRad);
+                    const y1 = 100 + 80 * Math.sin(startRad);
+                    const x2 = 100 + 80 * Math.cos(endRad);
+                    const y2 = 100 + 80 * Math.sin(endRad);
+                    
+                    const largeArc = angle > 180 ? 1 : 0;
+                    
+                    const path = `M 100 100 L ${x1} ${y1} A 80 80 0 ${largeArc} 1 ${x2} ${y2} Z`;
+                    
+                    currentAngle = endAngle;
+                    
+                    return (
+                      <path
+                        key={row.label}
+                        d={path}
+                        fill={colors[idx % colors.length]}
+                        stroke="white"
+                        strokeWidth="2"
+                      />
+                    );
+                  });
+                })()}
+              </svg>
+            </div>
+            
+            {/* Legend and Stats */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ fontWeight: "bold", fontSize: "1.2rem" }}>
+                Total Incidents: {stats?.total_incidents?.toLocaleString() ?? 0}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {breakdownRows.map((row, idx) => {
+                  const colors = ["#ef4444", "#3b82f6", "#10b981", "#f59e0b"];
+                  return (
+                    <div key={row.label} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <div
+                        style={{
+                          width: "20px",
+                          height: "20px",
+                          borderRadius: "4px",
+                          background: colors[idx % colors.length],
+                        }}
+                      />
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 600, fontSize: "0.95rem" }}>{row.label}</div>
+                        <div style={{ fontSize: "0.85rem", color: "#6b7280" }}>
+                          {row.total.toLocaleString()} incidents ({row.percentage}%)
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}

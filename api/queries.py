@@ -3,6 +3,8 @@ import pandas as pd
 import sqlite3
 import datetime
 import os
+import random
+import string
 
 app = Flask(__name__)
 
@@ -1084,7 +1086,7 @@ def create_sfpd_incident():
             data.get("latitude"),
             data.get("location"),
             data.get("pdid"),
-            timestamp
+            data.get("timestamp")
         )
         cursor.execute(query, values)
         result = cursor.fetchone()

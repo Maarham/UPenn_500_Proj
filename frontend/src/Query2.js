@@ -47,8 +47,8 @@ function Query2() {
   };
 
   return (
-    <div style={{ padding: "20px", maxWidth: "900px" }}>
-      <h2>Query 2 — Top Neighborhoods by Incident Count</h2>
+    <div>
+      <h2 style={{ marginTop: 0 }}>Query 2 — Top Neighborhoods by Incident Count</h2>
 
       <p style={{ maxWidth: "900px" }}>
         Returns a ranked list of neighborhoods by total incident count, including
@@ -89,42 +89,70 @@ function Query2() {
       {/* Error message */}
       {error && <div style={{ color: "red" }}>Error: {error}</div>}
 
-      {/* Results table */}
-      <table
-        border="1"
-        cellPadding="8"
-        style={{ borderCollapse: "collapse", width: "100%" }}
-      >
-        <thead>
-          <tr>
-            <th>Neighborhood</th>
-            <th>Incident Count</th>
-            <th>Data Sources</th>
-            <th>Incident Types</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {/* If no data yet */}
-          {data.length === 0 ? (
-            <tr>
-              <td colSpan="4" style={{ textAlign: "center" }}>
-                No Data — click Load Data
-              </td>
-            </tr>
-          ) : (
-            // Loop through returned rows
-            data.map((row, index) => (
-              <tr key={index}>
-                <td>{row.neighborhood}</td>
-                <td>{row.incident_count}</td>
-                <td>{row.data_sources}</td>
-                <td>{row.incident_types}</td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+      {/* Results visualization */}
+      {data.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "40px", color: "#6b7280" }}>
+          No Data — click Load Data
+        </div>
+      ) : (() => {
+        const maxCount = Math.max(...data.map(d => d.incident_count));
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            {data.map((row, index) => {
+              const barWidth = (row.incident_count / maxCount) * 100;
+              const colors = [
+                "#ef4444", "#f97316", "#f59e0b", "#10b981", "#14b8a6",
+                "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7", "#ec4899"
+              ];
+              return (
+                <div
+                  key={index}
+                  style={{
+                    background: "white",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
+                    padding: "12px",
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
+                    <div style={{ 
+                      minWidth: "160px", 
+                      fontSize: "0.95rem", 
+                      fontWeight: 600,
+                      color: "#111827"
+                    }}>
+                      {row.neighborhood}
+                    </div>
+                    <div style={{ flex: 1, position: "relative", height: "36px" }}>
+                      <div
+                        style={{
+                          width: `${barWidth}%`,
+                          height: "100%",
+                          background: colors[index % colors.length],
+                          borderRadius: "6px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "flex-end",
+                          paddingRight: "12px",
+                        }}
+                      >
+                        <span style={{ 
+                          color: "white", 
+                          fontSize: "0.9rem", 
+                          fontWeight: 700,
+                          textShadow: "0 1px 3px rgba(0,0,0,0.3)"
+                        }}>
+                          {row.incident_count.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
     </div>
   );
 }
