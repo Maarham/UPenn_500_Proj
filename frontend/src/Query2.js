@@ -5,6 +5,7 @@
 // with optional filters for limit and minimum incident threshold.
 
 import React, { useState } from "react";
+import { API_BASE_URL } from "./config";
 
 function Query2() {
   // State variables for API data, filters, UI states
@@ -21,7 +22,7 @@ function Query2() {
 
     try {
       // Build the API URL dynamically
-      let url = `/api/neighborhood/top?limit=${limit}`;
+      let url = `${API_BASE_URL}/api/neighborhood/top?limit=${limit}`;
       if (minIncidents !== "") {
         url += `&min_incidents=${minIncidents}`;
       }

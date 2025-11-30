@@ -2,7 +2,7 @@
 // This component implements Query 9 from the backend:
 // GET /api/fire/top-neighborhoods
 // It returns, for each of the latest M years, the top N neighborhoods with
-// the most fire incidents, plus each neighborhood’s percentage share
+// the most fire incidents, plus each neighborhood's percentage share
 // within that year.
 //
 // Query parameters:
@@ -10,6 +10,7 @@
 //   - years (1–5, default 3): number of recent years to include
 
 import React, { useState, useEffect, useCallback } from "react";
+import { API_BASE_URL } from "./config";
 
 function Query9() {
   // User-controlled inputs for the backend query
@@ -46,7 +47,7 @@ function Query9() {
 
     try {
       // Build query string with both parameters
-      const url = `/api/fire/top-neighborhoods?limit=${limit}&years=${years}`;
+      const url = `${API_BASE_URL}/api/fire/top-neighborhoods?limit=${limit}&years=${years}`;
 
       const res = await fetch(url);
       const json = await res.json();

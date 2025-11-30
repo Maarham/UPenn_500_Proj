@@ -4,6 +4,7 @@
 // It loads all incidents ordered by time, with optional filtering by source table.
 
 import React, { useState } from "react";
+import { API_BASE_URL } from "./config";
 
 function Query1() {
   // State variables for data, filters, loading status, error messages
@@ -20,7 +21,7 @@ function Query1() {
 
     try {
       // Build request URL dynamically based on selected parameters
-      let url = `/api/incidents/timeline?limit=${limit}`;
+      let url = `${API_BASE_URL}/api/incidents/timeline?limit=${limit}`;
       if (source !== "") {
         url += `&source=${source}`;
       }
