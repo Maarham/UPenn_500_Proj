@@ -6,6 +6,8 @@ import datetime
 import os
 import random
 import string
+from geopy.geocoders import Nominatim
+from geopy.exc import GeocoderServiceError
 
 app = Flask(__name__)
 
@@ -23,11 +25,39 @@ CORS(app, resources={
 DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'sql_databases', 'processed_data.db')
 RESULTS_DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'sql_databases', 'results.db')
 
+geolocator = Nominatim(user_agent="sf-public-safety-dashboard")
+
 def get_db_connection(db_path=DB_PATH):
     """Create a database connection"""
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def parse_float(value):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def geocode_address(address, zip_code=None):
+    if not address:
+        return None, None
+
+    query_parts = [address, "San Francisco", "CA"]
+    if zip_code:
+        query_parts.append(str(zip_code))
+    query = ", ".join(query_parts)
+
+    try:
+        location = geolocator.geocode(query, timeout=5)
+        if location:
+            return location.latitude, location.longitude
+    except GeocoderServiceError:
+        pass
+
+    return None, None
 
 
 # Query 1: All Incidents by Time
@@ -990,6 +1020,17 @@ def create_311_service_request():
         if field not in data or not data.get(field):
             return jsonify({"error": f"Missing required field '{field}'"}), 400
     try:
+        latitude = parse_float(data.get("latitude"))
+        longitude = parse_float(data.get("longitude"))
+
+        if latitude is None or longitude is None:
+            zip_code = data.get("zip_code")
+            geocoded_lat, geocoded_lon = geocode_address(data.get("incident_address"), zip_code)
+            if latitude is None:
+                latitude = geocoded_lat
+            if longitude is None:
+                longitude = geocoded_lon
+
         query = """
         INSERT INTO "311_service_requests" (
             unique_key, created_date, closed_date,
@@ -998,29 +1039,30 @@ def create_311_service_request():
             incident_address, supervisor_district, neighborhood,
             location, source, media_url, latitude, longitude, police_district
         )
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
-                %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
+                ?, ?, ?, ?, ?, ?, ?, ?, ?)
         RETURNING *;
         """
         values = (
-            unique_key,
-            created_timestamp,
-            None,
-            status,
-            None,
-            None,
-            data.get('category'), 
+            unique_key,                   # unique_key
+            created_timestamp,            # created_date
+            None,                         # closed_date
+            None,                         # resolution_action_updated_date
+            status,                       # status
+            None,                         # status_notes
+            None,                         # agency_name
+            data.get('category'),
             data.get('complaint_type'),
-            data.get('descriptor'), 
+            data.get('descriptor'),
             data.get('incident_address'),
-            None,
+            None,                         # supervisor_district
             data.get('neighborhood'),
-            None, 
+            None,                         # location
             source,
-            None,
-            None,
-            None,
-            None
+            None,                         # media_url
+            latitude,
+            longitude,
+            None                          # police_district
         )
         cursor.execute(query, values)
         result = cursor.fetchone()
@@ -1081,7 +1123,7 @@ def create_sfpd_incident():
                 unique_key, category, descript, dayofweek, pddistrict,
                 resolution, address, longitude, latitude, location, pdid, timestamp
             )
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
             RETURNING *;
         """
 
@@ -1097,7 +1139,7 @@ def create_sfpd_incident():
             data.get("latitude"),
             data.get("location"),
             data.get("pdid"),
-            data.get("timestamp")
+            data.get("timestamp") or created_timestamp
         )
         cursor.execute(query, values)
         result = cursor.fetchone()
@@ -1123,8 +1165,8 @@ def create_fire_incident():
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    ## generating unique key
-    cursor.execute('''SELECT DISTINCT unique_key FROM fire_incidents ''')
+    ## generating unique incident number
+    cursor.execute('''SELECT DISTINCT "Incident Number" FROM fire_incidents ''')
     existing_keys = [row[0] for row in cursor.fetchall()]
     existing_keys_set = set(existing_keys)
     def generate_unique_key():
@@ -1149,8 +1191,8 @@ def create_fire_incident():
             "Civilian Injuries", "Number of Alarms", "Primary Situation",
             "Mutual Aid", "Action Taken Primary", "Action Taken Secondary",
             "Property Use", "Supervisor District", "Analysis Neighborhood"
-        ) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                  %s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,
+                  ?,?,?,?,?,?,?,?,?,?)
         RETURNING *;
     """
 
