@@ -87,7 +87,7 @@ export const createInitialFilters = () => {
 
 export const inputStyle = {
   border: "1px solid #d1d5db",
-  borderRadius: "999px",
+  borderRadius: "12px",
   padding: "6px 10px",
   fontSize: "0.85rem",
   minWidth: "180px",
