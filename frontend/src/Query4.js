@@ -2,7 +2,6 @@
 //This component implements Query 4:
 
 import React, { useState, useEffect, useCallback } from "react";
-import { getApiUrl } from "./utils";
 
 function Query4() {
   // State for API response, loading indicator, and potential error
@@ -16,7 +15,7 @@ function Query4() {
     setError("");
 
     try {
-      const res = await fetch(getApiUrl("/stats/incident_type_breakdown"));
+      const res = await fetch("/stats/incident_type_breakdown");
       const json = await res.json();
 
       if (!res.ok) {

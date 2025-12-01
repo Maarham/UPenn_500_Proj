@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import pandas as pd
 import sqlite3
 import datetime
@@ -7,6 +8,16 @@ import random
 import string
 
 app = Flask(__name__)
+
+# Enable CORS for all routes
+CORS(app, resources={
+    r"/*": {
+        "origins": [
+            "http://localhost:3000",  # Local development
+            "https://sf-safety-portal.onrender.com"  # Production frontend
+        ]
+    }
+})
 
 # Database paths
 DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'sql_databases', 'processed_data.db')
