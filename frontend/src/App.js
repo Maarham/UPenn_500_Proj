@@ -11,6 +11,7 @@ import Query7 from "./Query7";
 import Query8 from "./Query8";
 import Query9 from "./Query9";
 import Query10 from "./Query10";
+import IncidentReport from "./IncidentReport";
 
 // Utilities and constants
 import {
@@ -296,6 +297,7 @@ function App() {
             <FilterField label="From">
               <input
                 type="datetime-local"
+                lang="en"
                 value={filters.fromDate || ""}
                 onChange={(e) =>
                   setFilters((prev) => ({ ...prev, fromDate: e.target.value }))
@@ -306,6 +308,7 @@ function App() {
             <FilterField label="To">
               <input
                 type="datetime-local"
+                lang="en"
                 value={filters.toDate || ""}
                 onChange={(e) => setFilters((prev) => ({ ...prev, toDate: e.target.value }))}
                 style={inputStyle}
@@ -423,6 +426,14 @@ function App() {
         </div>
       );
     }
+    // Tab 5: Incident Report
+    else if (activeTab === 5) {
+      return (
+        <Card variant="large">
+          <IncidentReport />
+        </Card>
+      );
+    }
   };
 
   // UI Rendering
@@ -468,6 +479,7 @@ function App() {
             { id: 2, label: "Neighborhoods" },
             { id: 3, label: "Stats & Trends" },
             { id: 4, label: "Fire & Response" },
+            { id: 5, label: "Report Incident" },
           ].map((tab) => (
             <button
               key={tab.id}
