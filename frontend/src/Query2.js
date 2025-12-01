@@ -5,6 +5,7 @@
 // with optional filters for limit and minimum incident threshold.
 
 import React, { useState } from "react";
+import { getApiUrl } from "./utils";
 
 function Query2() {
   // State variables for API data, filters, UI states
@@ -27,7 +28,7 @@ function Query2() {
       }
 
       // Make request to backend
-      const res = await fetch(url);
+      const res = await fetch(getApiUrl(url));
       const json = await res.json();
 
       // Handle backend error responses

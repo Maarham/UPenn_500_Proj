@@ -19,6 +19,7 @@ import {
   parseDateSafely,
   createInitialFilters,
   inputStyle,
+  getApiUrl,
 } from "./utils";
 
 // Map and filter components
@@ -89,7 +90,7 @@ function App() {
         }
 
         // Call API
-        const response = await fetch(`/api/incidents/timeline?${params.toString()}`, {
+        const response = await fetch(getApiUrl(`/api/incidents/timeline?${params.toString()}`), {
           signal: controller.signal,
         });
         const json = await response.json();

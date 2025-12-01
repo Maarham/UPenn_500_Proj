@@ -3,6 +3,7 @@
 // GET /api/fire/incomplete_inspections with optional limit.
 
 import React, { useState, useEffect, useCallback } from "react";
+import { getApiUrl } from "./utils";
 
 function Query8() {
     const [limit, setLimit] = useState(10);
@@ -21,7 +22,7 @@ function Query8() {
         setError("");
 
         try {
-            const res = await fetch(`/api/fire/incomplete_inspections?limit=${limit}`);
+            const res = await fetch(getApiUrl(`/api/fire/incomplete_inspections?limit=${limit}`));
             const json = await res.json();
 
             if (!res.ok) {

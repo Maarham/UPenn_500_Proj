@@ -1,3 +1,9 @@
+// API base URL - uses environment variable in production, empty string in development (uses proxy)
+export const API_BASE_URL = process.env.REACT_APP_API_URL || '';
+
+// Helper function to generate API URLs
+export const getApiUrl = (path) => `${API_BASE_URL}${path}`;
+
 export const SOURCE_OPTIONS = [
   { value: "311_service_requests", label: "311 Service Requests" },
   { value: "fire_incidents", label: "Fire Incidents" },

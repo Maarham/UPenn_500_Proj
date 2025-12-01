@@ -5,6 +5,7 @@
 
 
 import React, { useState, useEffect, useCallback } from "react";
+import { getApiUrl } from "./utils";
 
 
 function Query10() {
@@ -36,7 +37,7 @@ function Query10() {
      const url = `/api/sffd/response-times?limit=${limit}&sort_by=${sortBy}&order=${order}`;
 
 
-     const res = await fetch(url);
+     const res = await fetch(getApiUrl(url));
      const json = await res.json();
 
 

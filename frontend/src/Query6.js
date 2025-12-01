@@ -3,6 +3,7 @@
 
 
 import React, { useState, useEffect, useCallback } from "react";
+import { getApiUrl } from "./utils";
 
 function Query6() {
     const [limit, setLimit] = useState("10");
@@ -22,7 +23,7 @@ function Query6() {
         setLoading(true);
         setError("");
         try {
-            const response = await fetch(`/stats/top_crime_categories?limit=${parsedLimit}`);
+            const response = await fetch(getApiUrl(`/stats/top_crime_categories?limit=${parsedLimit}`));
             const json = await response.json();
 
             if (!response.ok) {

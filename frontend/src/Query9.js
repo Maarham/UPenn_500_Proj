@@ -10,6 +10,7 @@
 //   - years (1–5, default 3): number of recent years to include
 
 import React, { useState, useEffect, useCallback } from "react";
+import { getApiUrl } from "./utils";
 
 function Query9() {
   // User-controlled inputs for the backend query
@@ -48,7 +49,7 @@ function Query9() {
       // Build query string with both parameters
       const url = `/api/fire/top-neighborhoods?limit=${limit}&years=${years}`;
 
-      const res = await fetch(url);
+      const res = await fetch(getApiUrl(url));
       const json = await res.json();
 
       if (!res.ok) {

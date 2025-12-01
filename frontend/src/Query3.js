@@ -6,6 +6,7 @@
 // Optional filters: neighborhood, time_period, day_type, and top_n.
 
 import React, { useState } from "react";
+import { getApiUrl } from "./utils";
 
 function Query3() {
   // State variables for data, filters, UI states
@@ -31,7 +32,7 @@ function Query3() {
       if (dayType !== "") url += `&day_type=${dayType}`;
 
       // Make request
-      const res = await fetch(url);
+      const res = await fetch(getApiUrl(url));
       const json = await res.json();
 
       // Handle backend errors
