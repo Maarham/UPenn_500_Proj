@@ -4,6 +4,7 @@
 // It loads all incidents ordered by time, with optional filtering by source table.
 
 import React, { useState } from "react";
+import { getApiUrl } from "./utils";
 
 function Query1() {
   // State variables for data, filters, loading status, error messages
@@ -26,7 +27,7 @@ function Query1() {
       }
 
       // Make API request
-      const res = await fetch(url);
+      const res = await fetch(getApiUrl(url));
       const json = await res.json();
 
       // Handle backend error cases

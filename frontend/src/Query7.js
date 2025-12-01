@@ -3,6 +3,7 @@
 // associated "Action Taken Primary" values via GET /api/fire/primary_situation.
 
 import React, { useState, useEffect, useCallback } from "react";
+import { getApiUrl } from "./utils";
 
 function Query7() {
   const [rows, setRows] = useState([]);
@@ -14,7 +15,7 @@ function Query7() {
     setError("");
 
     try {
-      const res = await fetch("/api/fire/primary_situation");
+      const res = await fetch(getApiUrl("/api/fire/primary_situation"));
       const json = await res.json();
 
       if (!res.ok) {
