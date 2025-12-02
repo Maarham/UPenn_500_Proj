@@ -63,12 +63,18 @@ export function SpatialExplorer({
             Available data range: {formatDisplayDate(dateRange.earliest)} → {formatDisplayDate(dateRange.latest)}
           </div>
         )}
-        {(filters.fromDate || filters.toDate) && (
+        {(filters.fromDate || filters.toDate) ? (
           <div style={{ marginTop: "4px", fontSize: "0.75rem", color: "#3b82f6" }}>
             Filter range: 
             {filters.fromDate && ` From ${new Date(filters.fromDate).toLocaleString()}`}
             {filters.toDate && ` To ${new Date(filters.toDate).toLocaleString()}`}
           </div>
+        ) : (
+          dateRange && (
+            <div style={{ marginTop: "4px", fontSize: "0.75rem", color: "#22c55e" }}>
+              Displaying all available data from {formatDisplayDate(dateRange.earliest)} to {formatDisplayDate(dateRange.latest)}
+            </div>
+          )
         )}
       </div>
 
