@@ -323,7 +323,9 @@ function IncidentMarker({ incident, colorOverride }) {
     >
       <Popup 
         autoPan={true}
-        autoPanPadding={[50, 50]}
+        autoPanPaddingTopLeft={[50, 150]}
+        autoPanPaddingBottomRight={[50, 50]}
+        keepInView={true}
       >
         <IncidentPopup incident={incident} badgeColor={color} />
       </Popup>
