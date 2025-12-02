@@ -103,11 +103,6 @@ export function SpatialExplorer({
             center={DEFAULT_CENTER}
             zoom={DEFAULT_ZOOM}
             scrollWheelZoom
-            maxBounds={[
-              [SF_BOUNDS.south, SF_BOUNDS.west],
-              [SF_BOUNDS.north, SF_BOUNDS.east],
-            ]}
-            maxBoundsViscosity={1.0}
             style={{ height: "420px", width: "100%" }}
           >
             <TileLayer
@@ -323,9 +318,8 @@ function IncidentMarker({ incident, colorOverride }) {
     >
       <Popup 
         autoPan={true}
-        autoPanPaddingTopLeft={[50, 150]}
+        autoPanPaddingTopLeft={[50, 100]}
         autoPanPaddingBottomRight={[50, 50]}
-        keepInView={true}
       >
         <IncidentPopup incident={incident} badgeColor={color} />
       </Popup>
