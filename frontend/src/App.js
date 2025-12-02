@@ -389,6 +389,7 @@ function App() {
             error={spatialError}
             filters={filters}
             topCategories={topCategories}
+            dateRange={dateRange}
             onSelectCategory={(category) =>
               setFilters((prev) => ({ ...prev, category }))
             }

@@ -57,7 +57,11 @@ export function SpatialExplorer({
             color: "#111827",
           }}
         >
-          City Incidents
+          City Incidents {incidents.length > 0 && (
+            <span style={{ fontWeight: 500, color: "#6b7280", fontSize: "0.9rem" }}>
+              ({incidents.length} showing)
+            </span>
+          )}
         </h2>
         {dateRange && (
           <div style={{ margin: 0, marginTop: "4px", fontSize: "0.75rem", color: "#9ca3af" }}>
