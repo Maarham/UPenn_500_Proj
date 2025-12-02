@@ -157,9 +157,12 @@ function App() {
 
     return rawIncidents
       .filter((incident) => {
-        // Validate coordinates
-        const lat = Number(incident?.latitude);
-        const lon = Number(incident?.longitude);
+        // Validate coordinates - must exist and be valid numbers
+        if (incident?.latitude == null || incident?.longitude == null) return false;
+        
+        const lat = Number(incident.latitude);
+        const lon = Number(incident.longitude);
+        
         if (!Number.isFinite(lat) || !Number.isFinite(lon)) return false;
         if (!isWithinSFBounds(lat, lon)) return false;
 
@@ -294,6 +297,20 @@ function App() {
               alignItems: "center",
             }}
           >
+            <FilterField label="Max Records">
+              <select
+                value={filters.limit}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, limit: Number(e.target.value) }))
+                }
+                style={inputStyle}
+              >
+                <option value="1000">1,000</option>
+                <option value="5000">5,000</option>
+                <option value="10000">10,000</option>
+
+              </select>
+            </FilterField>
             <FilterField label="From">
               <input
                 type="datetime-local"
@@ -368,7 +385,6 @@ function App() {
             error={spatialError}
             filters={filters}
             topCategories={topCategories}
-            dateRange={dateRange}
             onSelectCategory={(category) =>
               setFilters((prev) => ({ ...prev, category }))
             }

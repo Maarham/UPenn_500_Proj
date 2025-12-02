@@ -44,6 +44,7 @@ export function SpatialExplorer({
         display: "flex",
         flexDirection: "column",
         gap: "10px",
+        overflow: "visible",
       }}
     >
       {/* Header */}
@@ -79,6 +80,7 @@ export function SpatialExplorer({
           gridTemplateColumns: "minmax(0, 2.4fr) minmax(0, 1fr)",
           gap: "12px",
           alignItems: "stretch",
+          overflow: "visible",
         }}
       >
         {/* Map Container */}
@@ -86,7 +88,7 @@ export function SpatialExplorer({
           style={{
             position: "relative",
             borderRadius: "14px",
-            overflow: "hidden",
+            overflow: "visible",
             border: "1px solid #e5e7eb",
             background: "#f8fafc",
           }}
@@ -100,7 +102,7 @@ export function SpatialExplorer({
               [SF_BOUNDS.north, SF_BOUNDS.east],
             ]}
             maxBoundsViscosity={1.0}
-            style={{ height: "350px", width: "100%" }}
+            style={{ height: "420px", width: "100%" }}
           >
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -248,34 +250,52 @@ function AutoFitBounds({ incidents }) {
   useEffect(() => {
     if (!map) return;
     
-    if (!incidents.length) {
+    if (!incidents || !incidents.length) {
       map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
       return;
     }
     
-    const incidentBounds = latLngBounds(
-      incidents.map((incident) => [incident.lat, incident.lon])
+    // Filter out incidents with invalid coordinates
+    const validIncidents = incidents.filter(
+      (incident) => 
+        incident && 
+        Number.isFinite(incident.lat) && 
+        Number.isFinite(incident.lon)
     );
     
-    const sfBounds = latLngBounds([
-      [SF_BOUNDS.south, SF_BOUNDS.west],
-      [SF_BOUNDS.north, SF_BOUNDS.east],
-    ]);
+    if (validIncidents.length === 0) {
+      map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+      return;
+    }
     
-    const boundsToFit = incidentBounds.pad(0.05);
-    
-    const finalBounds = latLngBounds([
-      [
-        Math.max(boundsToFit.getSouth(), sfBounds.getSouth()),
-        Math.max(boundsToFit.getWest(), sfBounds.getWest()),
-      ],
-      [
-        Math.min(boundsToFit.getNorth(), sfBounds.getNorth()),
-        Math.min(boundsToFit.getEast(), sfBounds.getEast()),
-      ],
-    ]);
+    try {
+      const incidentBounds = latLngBounds(
+        validIncidents.map((incident) => [incident.lat, incident.lon])
+      );
+      
+      const sfBounds = latLngBounds([
+        [SF_BOUNDS.south, SF_BOUNDS.west],
+        [SF_BOUNDS.north, SF_BOUNDS.east],
+      ]);
+      
+      const boundsToFit = incidentBounds.pad(0.05);
+      
+      const finalBounds = latLngBounds([
+        [
+          Math.max(boundsToFit.getSouth(), sfBounds.getSouth()),
+          Math.max(boundsToFit.getWest(), sfBounds.getWest()),
+        ],
+        [
+          Math.min(boundsToFit.getNorth(), sfBounds.getNorth()),
+          Math.min(boundsToFit.getEast(), sfBounds.getEast()),
+        ],
+      ]);
 
-    map.fitBounds(finalBounds, { maxZoom: 14 });
+      map.fitBounds(finalBounds, { maxZoom: 14 });
+    } catch (error) {
+      console.error("Error fitting bounds:", error);
+      map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+    }
   }, [map, incidents]);
 
   return null;
@@ -295,7 +315,10 @@ function IncidentMarker({ incident, colorOverride }) {
         fillOpacity: 0.75,
       }}
     >
-      <Popup>
+      <Popup 
+        autoPan={true}
+        autoPanPadding={[50, 50]}
+      >
         <IncidentPopup incident={incident} badgeColor={color} />
       </Popup>
     </CircleMarker>

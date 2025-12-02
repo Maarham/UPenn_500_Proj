@@ -36,3 +36,30 @@
     transform: rotate(360deg);
   }
 }
+
+/* Allow Leaflet popups to overflow outside map container */
+.leaflet-container {
+  overflow: visible !important;
+}
+
+.leaflet-pane {
+  overflow: visible !important;
+}
+
+.leaflet-map-pane {
+  overflow: visible !important;
+}
+
+.leaflet-popup-pane {
+  overflow: visible !important;
+  z-index: 9999 !important;
+}
+
+.leaflet-popup {
+  z-index: 9999 !important;
+}
+
+/* Ensure popup content is fully visible */
+.leaflet-popup-content-wrapper {
+  overflow: visible !important;
+}

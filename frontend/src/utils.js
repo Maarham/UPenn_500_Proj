@@ -77,7 +77,7 @@ export const getSourceLabel = (value) =>
 
 export const createInitialFilters = () => {
   return {
-    limit: 100000,
+    limit: 5000,
     fromDate: "",
     toDate: "",
     sources: SOURCE_OPTIONS.map((option) => option.value),
