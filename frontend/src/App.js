@@ -477,7 +477,7 @@ function App() {
               color: "#111827",
             }}
           >
-            San Francisco Public Safety Dashboard
+            San Francisco Public Safety Intelligence Portal
           </h1>
         </header>
 
