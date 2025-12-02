@@ -80,7 +80,7 @@ export const createInitialFilters = () => {
     limit: 5000,
     fromDate: "",
     toDate: "",
-    sources: SOURCE_OPTIONS.map((option) => option.value),
+    sources: ["311_service_requests"], // Default to show only 311 Service Requests
     category: "All",
   };
 };

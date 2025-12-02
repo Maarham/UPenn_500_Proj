@@ -71,10 +71,12 @@ def getIncidentTimeline():
     Query Parameters:
     - limit (integer): Max number of incidents to return
     - source (string): Filter by source table
+    - prioritize_coords (boolean): If true, prioritize records with valid coordinates (for map rendering)
     """
     try:
         limit = request.args.get('limit', type=int)
         source = request.args.get('source', type=str)
+        prioritize_coords = request.args.get('prioritize_coords', 'false').lower() == 'true'
 
         # Valid source tables
         valid_sources = [
@@ -190,22 +192,39 @@ def getIncidentTimeline():
             WHERE timestamp IS NOT NULL
         """
 
+        # Wrap query in subquery for proper ordering
+        wrapped_query = f"""
+            SELECT * FROM (
+                {query}
+            )
+        """
+        
         # Add source filter if provided
         if source:
-            query = f"""
+            wrapped_query = f"""
                 SELECT * FROM (
-                    {query}
+                    {wrapped_query}
                 ) WHERE source_table = ?
-                ORDER BY incident_time DESC
             """
+            # Only prioritize coordinates if requested (for map rendering)
+            if prioritize_coords:
+                # Use CAST to handle string coordinates, and filter out 0.0 values
+                wrapped_query += " ORDER BY CASE WHEN latitude IS NOT NULL AND longitude IS NOT NULL AND CAST(latitude AS REAL) != 0 AND CAST(longitude AS REAL) != 0 THEN 0 ELSE 1 END, incident_time DESC"
+            else:
+                wrapped_query += " ORDER BY incident_time DESC"
             if limit:
-                query += f" LIMIT {limit}"
-            cursor.execute(query, (source,))
+                wrapped_query += f" LIMIT {limit}"
+            cursor.execute(wrapped_query, (source,))
         else:
-            query += " ORDER BY incident_time DESC"
+            # Only prioritize coordinates if requested (for map rendering)
+            if prioritize_coords:
+                # Use CAST to handle string coordinates, and filter out 0.0 values
+                wrapped_query += " ORDER BY CASE WHEN latitude IS NOT NULL AND longitude IS NOT NULL AND CAST(latitude AS REAL) != 0 AND CAST(longitude AS REAL) != 0 THEN 0 ELSE 1 END, incident_time DESC"
+            else:
+                wrapped_query += " ORDER BY incident_time DESC"
             if limit:
-                query += f" LIMIT {limit}"
-            cursor.execute(query)
+                wrapped_query += f" LIMIT {limit}"
+            cursor.execute(wrapped_query)
 
         rows = cursor.fetchall()
 

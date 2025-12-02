@@ -85,6 +85,8 @@ function App() {
         // Set up API parameters
         const params = new URLSearchParams();
         params.set("limit", fetchParams.limit);
+        // Prioritize coordinates for map rendering (Tab 1 only)
+        params.set("prioritize_coords", "true");
 
         if (fetchParams.sources.length === 1) {
           params.set("source", fetchParams.sources[0]);
@@ -176,13 +178,15 @@ function App() {
           return false;
         }
 
-        // Date filter
+        // Date filter - only apply if dates are explicitly set
+        // If no dates are set, show all available data (from earliest to latest)
         if (from || to) {
           const incidentTime = parseDateSafely(incident.incident_time);
           if (!incidentTime) return false;
           if (from && incidentTime < from) return false;
           if (to && incidentTime > to) return false;
         }
+        // If no date filters are set, include all incidents (no date filtering)
 
         return true;
       })
