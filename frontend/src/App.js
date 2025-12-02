@@ -85,6 +85,8 @@ function App() {
         // Set up API parameters
         const params = new URLSearchParams();
         params.set("limit", fetchParams.limit);
+        // Prioritize coordinates for map rendering (Tab 1 only)
+        params.set("prioritize_coords", "true");
 
         if (fetchParams.sources.length === 1) {
           params.set("source", fetchParams.sources[0]);
