@@ -12,7 +12,7 @@ cd api
 ```
 3. Install Dependencies
 ```bash
-pip install -r ../requirements.txt
+pip install -r requirements.txt
 ```
 5. Run the Flask server
 ```bash
