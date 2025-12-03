@@ -20,6 +20,7 @@ The dataset is available here: https://www.kaggle.com/datasets/san-francisco/sf-
 - fire-inspections.csv
 - fire-safety-complaints.csv
 - fire-violations.csv
+  
   One method of downloading and retrieving the dataset is creating a Kaggle Account and going to the dataset page and click "Download" to download the datasets locally into your compute.
   The fire-inspections, fire-safety-complaints.csv and fire-violations are small enough to be on our data folder.
   
