@@ -44,6 +44,7 @@ export function SpatialExplorer({
         display: "flex",
         flexDirection: "column",
         gap: "10px",
+        overflow: "visible",
       }}
     >
       {/* Header */}
@@ -56,19 +57,29 @@ export function SpatialExplorer({
             color: "#111827",
           }}
         >
-          City Incidents
+          City Incidents {incidents.length > 0 && (
+            <span style={{ fontWeight: 500, color: "#6b7280", fontSize: "0.9rem" }}>
+              ({incidents.length} showing)
+            </span>
+          )}
         </h2>
         {dateRange && (
           <div style={{ margin: 0, marginTop: "4px", fontSize: "0.75rem", color: "#9ca3af" }}>
             Available data range: {formatDisplayDate(dateRange.earliest)} → {formatDisplayDate(dateRange.latest)}
           </div>
         )}
-        {(filters.fromDate || filters.toDate) && (
+        {(filters.fromDate || filters.toDate) ? (
           <div style={{ marginTop: "4px", fontSize: "0.75rem", color: "#3b82f6" }}>
             Filter range: 
             {filters.fromDate && ` From ${new Date(filters.fromDate).toLocaleString()}`}
             {filters.toDate && ` To ${new Date(filters.toDate).toLocaleString()}`}
           </div>
+        ) : (
+          dateRange && (
+            <div style={{ marginTop: "4px", fontSize: "0.75rem", color: "#22c55e" }}>
+              Displaying all available data from {formatDisplayDate(dateRange.earliest)} to {formatDisplayDate(dateRange.latest)}
+            </div>
+          )
         )}
       </div>
 
@@ -79,6 +90,7 @@ export function SpatialExplorer({
           gridTemplateColumns: "minmax(0, 2.4fr) minmax(0, 1fr)",
           gap: "12px",
           alignItems: "stretch",
+          overflow: "visible",
         }}
       >
         {/* Map Container */}
@@ -86,7 +98,7 @@ export function SpatialExplorer({
           style={{
             position: "relative",
             borderRadius: "14px",
-            overflow: "hidden",
+            overflow: "visible",
             border: "1px solid #e5e7eb",
             background: "#f8fafc",
           }}
@@ -95,12 +107,7 @@ export function SpatialExplorer({
             center={DEFAULT_CENTER}
             zoom={DEFAULT_ZOOM}
             scrollWheelZoom
-            maxBounds={[
-              [SF_BOUNDS.south, SF_BOUNDS.west],
-              [SF_BOUNDS.north, SF_BOUNDS.east],
-            ]}
-            maxBoundsViscosity={1.0}
-            style={{ height: "350px", width: "100%" }}
+            style={{ height: "420px", width: "100%" }}
           >
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -248,34 +255,52 @@ function AutoFitBounds({ incidents }) {
   useEffect(() => {
     if (!map) return;
     
-    if (!incidents.length) {
+    if (!incidents || !incidents.length) {
       map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
       return;
     }
     
-    const incidentBounds = latLngBounds(
-      incidents.map((incident) => [incident.lat, incident.lon])
+    // Filter out incidents with invalid coordinates
+    const validIncidents = incidents.filter(
+      (incident) => 
+        incident && 
+        Number.isFinite(incident.lat) && 
+        Number.isFinite(incident.lon)
     );
     
-    const sfBounds = latLngBounds([
-      [SF_BOUNDS.south, SF_BOUNDS.west],
-      [SF_BOUNDS.north, SF_BOUNDS.east],
-    ]);
+    if (validIncidents.length === 0) {
+      map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+      return;
+    }
     
-    const boundsToFit = incidentBounds.pad(0.05);
-    
-    const finalBounds = latLngBounds([
-      [
-        Math.max(boundsToFit.getSouth(), sfBounds.getSouth()),
-        Math.max(boundsToFit.getWest(), sfBounds.getWest()),
-      ],
-      [
-        Math.min(boundsToFit.getNorth(), sfBounds.getNorth()),
-        Math.min(boundsToFit.getEast(), sfBounds.getEast()),
-      ],
-    ]);
+    try {
+      const incidentBounds = latLngBounds(
+        validIncidents.map((incident) => [incident.lat, incident.lon])
+      );
+      
+      const sfBounds = latLngBounds([
+        [SF_BOUNDS.south, SF_BOUNDS.west],
+        [SF_BOUNDS.north, SF_BOUNDS.east],
+      ]);
+      
+      const boundsToFit = incidentBounds.pad(0.05);
+      
+      const finalBounds = latLngBounds([
+        [
+          Math.max(boundsToFit.getSouth(), sfBounds.getSouth()),
+          Math.max(boundsToFit.getWest(), sfBounds.getWest()),
+        ],
+        [
+          Math.min(boundsToFit.getNorth(), sfBounds.getNorth()),
+          Math.min(boundsToFit.getEast(), sfBounds.getEast()),
+        ],
+      ]);
 
-    map.fitBounds(finalBounds, { maxZoom: 14 });
+      map.fitBounds(finalBounds, { maxZoom: 14 });
+    } catch (error) {
+      console.error("Error fitting bounds:", error);
+      map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+    }
   }, [map, incidents]);
 
   return null;
@@ -295,7 +320,11 @@ function IncidentMarker({ incident, colorOverride }) {
         fillOpacity: 0.75,
       }}
     >
-      <Popup>
+      <Popup 
+        autoPan={true}
+        autoPanPaddingTopLeft={[50, 100]}
+        autoPanPaddingBottomRight={[50, 50]}
+      >
         <IncidentPopup incident={incident} badgeColor={color} />
       </Popup>
     </CircleMarker>

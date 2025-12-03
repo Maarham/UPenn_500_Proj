@@ -49,9 +49,10 @@ describe('Utils Functions', () => {
 
   test('createInitialFilters returns object with correct defaults', () => {
     const filters = createInitialFilters();
-    expect(filters.limit).toBe(100000);
+    expect(filters.limit).toBe(5000);
     expect(filters.category).toBe('All');
-    expect(filters.sources).toHaveLength(6);
+    expect(filters.sources).toHaveLength(1);
+    expect(filters.sources[0]).toBe('311_service_requests');
   });
 
   test('SOURCE_OPTIONS has all sources', () => {

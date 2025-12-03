@@ -106,7 +106,8 @@ def test_db():
             "Complaint Item Type Description" TEXT,
             Disposition TEXT,
             Address TEXT,
-            "Neighborhood  District" TEXT
+            "Neighborhood  District" TEXT,
+            Location TEXT
         )
     ''')
 
@@ -116,7 +117,8 @@ def test_db():
             "violation item description" TEXT,
             Status TEXT,
             Address TEXT,
-            "neighborhood district" TEXT
+            "neighborhood district" TEXT,
+            Location TEXT
         )
     ''')
 

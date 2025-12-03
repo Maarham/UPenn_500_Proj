@@ -85,6 +85,8 @@ function App() {
         // Set up API parameters
         const params = new URLSearchParams();
         params.set("limit", fetchParams.limit);
+        // Prioritize coordinates for map rendering (Tab 1 only)
+        params.set("prioritize_coords", "true");
 
         if (fetchParams.sources.length === 1) {
           params.set("source", fetchParams.sources[0]);
@@ -157,9 +159,12 @@ function App() {
 
     return rawIncidents
       .filter((incident) => {
-        // Validate coordinates
-        const lat = Number(incident?.latitude);
-        const lon = Number(incident?.longitude);
+        // Validate coordinates - must exist and be valid numbers
+        if (incident?.latitude == null || incident?.longitude == null) return false;
+        
+        const lat = Number(incident.latitude);
+        const lon = Number(incident.longitude);
+        
         if (!Number.isFinite(lat) || !Number.isFinite(lon)) return false;
         if (!isWithinSFBounds(lat, lon)) return false;
 
@@ -173,13 +178,15 @@ function App() {
           return false;
         }
 
-        // Date filter
+        // Date filter - only apply if dates are explicitly set
+        // If no dates are set, show all available data (from earliest to latest)
         if (from || to) {
           const incidentTime = parseDateSafely(incident.incident_time);
           if (!incidentTime) return false;
           if (from && incidentTime < from) return false;
           if (to && incidentTime > to) return false;
         }
+        // If no date filters are set, include all incidents (no date filtering)
 
         return true;
       })
@@ -294,6 +301,20 @@ function App() {
               alignItems: "center",
             }}
           >
+            <FilterField label="Max Records">
+              <select
+                value={filters.limit}
+                onChange={(e) =>
+                  setFilters((prev) => ({ ...prev, limit: Number(e.target.value) }))
+                }
+                style={inputStyle}
+              >
+                <option value="1000">1,000</option>
+                <option value="5000">5,000</option>
+                <option value="10000">10,000</option>
+
+              </select>
+            </FilterField>
             <FilterField label="From">
               <input
                 type="datetime-local"
@@ -456,7 +477,7 @@ function App() {
               color: "#111827",
             }}
           >
-            San Francisco Public Safety Dashboard
+            San Francisco Public Safety Intelligence Portal
           </h1>
         </header>
 

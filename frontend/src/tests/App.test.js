@@ -38,7 +38,7 @@ describe('App Component', () => {
 
   test('displays main title', () => {
     render(<App />);
-    const titleElement = screen.getByText(/San Francisco Public Safety Dashboard/i);
+    const titleElement = screen.getByText(/San Francisco Public Safety Intelligence Portal/i);
     expect(titleElement).toBeInTheDocument();
   });
 

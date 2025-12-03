@@ -351,42 +351,6 @@ function Query5() {
               </div>
             </div>
             
-            {/* Summary stats */}
-            <div style={{ 
-              marginTop: "20px", 
-              display: "grid",
-              gridTemplateColumns: "repeat(4, 1fr)",
-              gap: "12px",
-              padding: "16px",
-              background: "#f9fafb",
-              borderRadius: "8px",
-              border: "1px solid #e5e7eb"
-            }}>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "4px" }}>Period</div>
-                <div style={{ fontSize: "0.9rem", fontWeight: "600", color: "#111827" }}>
-                  {sortedMonths[0]?.month} - {sortedMonths[sortedMonths.length - 1]?.month}
-                </div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "4px" }}>Total Months</div>
-                <div style={{ fontSize: "0.9rem", fontWeight: "600", color: "#111827" }}>
-                  {sortedMonths.length}
-                </div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "4px" }}>Avg Crime/Month</div>
-                <div style={{ fontSize: "0.9rem", fontWeight: "600", color: "#ef4444" }}>
-                  {formatNumber(Math.round(sortedMonths.reduce((sum, m) => sum + m.crimeCnt, 0) / sortedMonths.length))}
-                </div>
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "0.75rem", color: "#6b7280", marginBottom: "4px" }}>Avg Fire/Month</div>
-                <div style={{ fontSize: "0.9rem", fontWeight: "600", color: "#f97316" }}>
-                  {formatNumber(Math.round(sortedMonths.reduce((sum, m) => sum + m.fireCnt, 0) / sortedMonths.length))}
-                </div>
-              </div>
-            </div>
           </div>
         );
       })()}

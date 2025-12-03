@@ -6,6 +6,8 @@ import datetime
 import os
 import random
 import string
+import json
+import ast
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderServiceError
 
@@ -26,6 +28,7 @@ DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'sql_databases', 'proces
 RESULTS_DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'sql_databases', 'results.db')
 
 geolocator = Nominatim(user_agent="sf-public-safety-dashboard")
+
 
 def get_db_connection(db_path=DB_PATH):
     """Create a database connection"""
@@ -68,10 +71,12 @@ def getIncidentTimeline():
     Query Parameters:
     - limit (integer): Max number of incidents to return
     - source (string): Filter by source table
+    - prioritize_coords (boolean): If true, prioritize records with valid coordinates (for map rendering)
     """
     try:
         limit = request.args.get('limit', type=int)
         source = request.args.get('source', type=str)
+        prioritize_coords = request.args.get('prioritize_coords', 'false').lower() == 'true'
 
         # Valid source tables
         valid_sources = [
@@ -90,7 +95,7 @@ def getIncidentTimeline():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Build the query
+        # Build the query - fetch location column for fire_safety_complaints and fire_violations
         query = """
             SELECT
                 '311_service_requests' AS source_table,
@@ -100,7 +105,9 @@ def getIncidentTimeline():
                 incident_address AS address,
                 neighborhood,
                 latitude,
-                longitude
+                longitude,
+                NULL AS location_json,
+                NULL AS zip_code
             FROM "311_service_requests"
             WHERE created_date IS NOT NULL
 
@@ -114,7 +121,9 @@ def getIncidentTimeline():
                 Address AS address,
                 "Analysis Neighborhood" AS neighborhood,
                 NULL AS latitude,
-                NULL AS longitude
+                NULL AS longitude,
+                NULL AS location_json,
+                "ZIP Code" AS zip_code
             FROM fire_incidents
             WHERE "Incident Date" IS NOT NULL
 
@@ -128,7 +137,9 @@ def getIncidentTimeline():
                 Address AS address,
                 "Neighborhood  District" AS neighborhood,
                 NULL AS latitude,
-                NULL AS longitude
+                NULL AS longitude,
+                Location AS location_json,
+                NULL AS zip_code
             FROM fire_safety_complaints
             WHERE "Received Date" IS NOT NULL
 
@@ -142,7 +153,9 @@ def getIncidentTimeline():
                 Address AS address,
                 "neighborhood district" AS neighborhood,
                 NULL AS latitude,
-                NULL AS longitude
+                NULL AS longitude,
+                Location AS location_json,
+                NULL AS zip_code
             FROM fire_violations
             WHERE "violation date" IS NOT NULL
 
@@ -156,7 +169,9 @@ def getIncidentTimeline():
                 address,
                 supervisor_district AS neighborhood,
                 latitude,
-                longitude
+                longitude,
+                NULL AS location_json,
+                NULL AS zip_code
             FROM sffd_service_calls
             WHERE call_date IS NOT NULL
 
@@ -170,27 +185,46 @@ def getIncidentTimeline():
                 address,
                 pddistrict AS neighborhood,
                 latitude,
-                longitude
+                longitude,
+                NULL AS location_json,
+                NULL AS zip_code
             FROM sfpd_incidents
             WHERE timestamp IS NOT NULL
         """
 
+        # Wrap query in subquery for proper ordering
+        wrapped_query = f"""
+            SELECT * FROM (
+                {query}
+            )
+        """
+        
         # Add source filter if provided
         if source:
-            query = f"""
+            wrapped_query = f"""
                 SELECT * FROM (
-                    {query}
+                    {wrapped_query}
                 ) WHERE source_table = ?
-                ORDER BY incident_time DESC
             """
+            # Only prioritize coordinates if requested (for map rendering)
+            if prioritize_coords:
+                # Use CAST to handle string coordinates, and filter out 0.0 values
+                wrapped_query += " ORDER BY CASE WHEN latitude IS NOT NULL AND longitude IS NOT NULL AND CAST(latitude AS REAL) != 0 AND CAST(longitude AS REAL) != 0 THEN 0 ELSE 1 END, incident_time DESC"
+            else:
+                wrapped_query += " ORDER BY incident_time DESC"
             if limit:
-                query += f" LIMIT {limit}"
-            cursor.execute(query, (source,))
+                wrapped_query += f" LIMIT {limit}"
+            cursor.execute(wrapped_query, (source,))
         else:
-            query += " ORDER BY incident_time DESC"
+            # Only prioritize coordinates if requested (for map rendering)
+            if prioritize_coords:
+                # Use CAST to handle string coordinates, and filter out 0.0 values
+                wrapped_query += " ORDER BY CASE WHEN latitude IS NOT NULL AND longitude IS NOT NULL AND CAST(latitude AS REAL) != 0 AND CAST(longitude AS REAL) != 0 THEN 0 ELSE 1 END, incident_time DESC"
+            else:
+                wrapped_query += " ORDER BY incident_time DESC"
             if limit:
-                query += f" LIMIT {limit}"
-            cursor.execute(query)
+                wrapped_query += f" LIMIT {limit}"
+            cursor.execute(wrapped_query)
 
         rows = cursor.fetchall()
 
@@ -198,6 +232,36 @@ def getIncidentTimeline():
         data = []
         sources = {}
         for row in rows:
+            # Parse coordinates
+            lat = row['latitude']
+            lon = row['longitude']
+            
+            # For fire_safety_complaints and fire_violations, parse location string
+            if row['location_json']:
+                try:
+                    # Try parsing as Python literal (dict string)
+                    location_data = ast.literal_eval(row['location_json'])
+                    if location_data and 'coordinates' in location_data:
+                        lon = location_data['coordinates'][0]
+                        lat = location_data['coordinates'][1]
+                except (ValueError, SyntaxError, KeyError, IndexError, TypeError):
+                    # Fallback: try JSON parsing
+                    try:
+                        location_data = json.loads(row['location_json'])
+                        if location_data and 'coordinates' in location_data:
+                            lon = location_data['coordinates'][0]
+                            lat = location_data['coordinates'][1]
+                    except (json.JSONDecodeError, KeyError, IndexError, TypeError):
+                        lat, lon = None, None
+            
+            # For fire_incidents, use ZIP Code to get approximate coordinates
+            elif row['source_table'] == 'fire_incidents' and row['zip_code']:
+                zip_code = str(row['zip_code']).split('.')[0]  # Remove .0 if present
+                if zip_code in SF_ZIP_COORDINATES:
+                    lat, lon = SF_ZIP_COORDINATES[zip_code]
+                else:
+                    lat, lon = None, None
+            
             data.append({
                 "source_table": row['source_table'],
                 "incident_time": row['incident_time'],
@@ -205,8 +269,8 @@ def getIncidentTimeline():
                 "description": row['description'],
                 "address": row['address'],
                 "neighborhood": row['neighborhood'],
-                "latitude": row['latitude'],
-                "longitude": row['longitude']
+                "latitude": lat,
+                "longitude": lon
             })
             sources[row['source_table']] = sources.get(row['source_table'], 0) + 1
 
@@ -1241,6 +1305,34 @@ def create_fire_incident():
         conn.rollback()
         return jsonify({"error": str(e)}), 500
 
-    
+   # San Francisco ZIP code to approximate latitude/longitude mapping
+SF_ZIP_COORDINATES = {
+    '94102': (37.7799, -122.4193),  # Civic Center
+    '94103': (37.7728, -122.4099),  # SOMA
+    '94104': (37.7914, -122.4016),  # Financial District
+    '94105': (37.7883, -122.3902),  # Rincon Hill
+    '94107': (37.7641, -122.3936),  # Potrero Hill
+    '94108': (37.7923, -122.4079),  # Chinatown
+    '94109': (37.7926, -122.4208),  # Nob Hill
+    '94110': (37.7487, -122.4160),  # Mission
+    '94111': (37.7984, -122.4040),  # Financial District North
+    '94112': (37.7202, -122.4428),  # Outer Mission
+    '94114': (37.7579, -122.4360),  # Castro
+    '94115': (37.7866, -122.4362),  # Western Addition
+    '94116': (37.7439, -122.4862),  # Outer Sunset
+    '94117': (37.7703, -122.4414),  # Haight-Ashbury
+    '94118': (37.7820, -122.4630),  # Richmond
+    '94121': (37.7768, -122.4979),  # Outer Richmond
+    '94122': (37.7586, -122.4856),  # Sunset
+    '94123': (37.8000, -122.4379),  # Marina
+    '94124': (37.7300, -122.3926),  # Bayview
+    '94127': (37.7367, -122.4564),  # West Portal
+    '94131': (37.7447, -122.4382),  # Glen Park
+    '94132': (37.7232, -122.4748),  # Lake Merced
+    '94133': (37.8023, -122.4101),  # North Beach
+    '94134': (37.7196, -122.4145),  # Visitacion Valley
+    '94158': (37.7714, -122.3892),  # Mission Bay
+}
+ 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)
