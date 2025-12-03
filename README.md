@@ -1,6 +1,9 @@
 # UPenn_500_Proj
 This is the repo for the CIS 5500: Databases Final project. All of the relevant code will be in this repo. 
 
+## Project Description
+The project is a full-stack public safety intelligence application, designed to visualize and analyze city safety data. The application is built with React and Flask where the React frontend provides the interactive, user-friendly interface, while the Flask backend handles the data ingestion, API endpoints, and database operations. 
+
 ## Downloading the Data
 
 ### Crime Data
