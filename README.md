@@ -22,6 +22,7 @@ The dataset is available here: https://www.kaggle.com/datasets/san-francisco/sf-
 - fire-violations.csv
   One method of downloading and retrieving the dataset is creating a Kaggle Account and going to the dataset page and click "Download" to download the datasets locally into your compute.
   The fire-inspections, fire-safety-complaints.csv and fire-violations are small enough to be on our data folder.
+  
   We cleaned fire-incidents.csv by filtering for Arrival DmTM >= 2016 to reduce the number of rows to 148786, we deleted columns: ['Battalion', 'Station Area', 'Box','point', 'Neighborhoods (old)', 'Zip Codes',
        'Fire Prevention Districts', 'Police Districts', 'Supervisor Districts',
        'Civic Center Harm Reduction Project Boundary', '2017 Fix It Zones',
@@ -30,5 +31,7 @@ The dataset is available here: https://www.kaggle.com/datasets/san-francisco/sf-
        'HSOC Zones as of 2018-06-05', 'Neighborhoods', 'SF Find Neighborhoods',
        'Current Police Districts', 'Current Supervisor Districts',
        'Analysis Neighborhoods'] to reduce the column size to 60 columns. This makes the file size decrease from 245mb to 52mb.
+
+  For fire-inspections, we reduced the size of the table by filtering for "Inspection Start Date" >= "2018-01-01".
        
   
