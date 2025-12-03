@@ -22,7 +22,7 @@ The dataset is available here: https://www.kaggle.com/datasets/san-francisco/sf-
 - fire-violations.csv
   One method of downloading and retrieving the dataset is creating a Kaggle Account and going to the dataset page and click "Download" to download the datasets locally into your compute.
   The fire-inspections, fire-safety-complaints.csv and fire-violations are small enough to be on our data folder.
-  We cleaned fire-incidents.csv by filtering for Arrival DmTM >= 2026 to reduce the number of rows to 148786, we deleted columns: ['Battalion', 'Station Area', 'Box','point', 'Neighborhoods (old)', 'Zip Codes',
+  We cleaned fire-incidents.csv by filtering for Arrival DmTM >= 2016 to reduce the number of rows to 148786, we deleted columns: ['Battalion', 'Station Area', 'Box','point', 'Neighborhoods (old)', 'Zip Codes',
        'Fire Prevention Districts', 'Police Districts', 'Supervisor Districts',
        'Civic Center Harm Reduction Project Boundary', '2017 Fix It Zones',
        'HSOC Zones', 'Central Market/Tenderloin Boundary',
