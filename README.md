@@ -4,6 +4,31 @@ This is the repo for the CIS 5500: Databases Final project. All of the relevant 
 ## Project Description
 The project is a full-stack public safety intelligence application, designed to visualize and analyze city safety data. The application is built with React and Flask where the React frontend provides the interactive, user-friendly interface, while the Flask backend handles the data ingestion, API endpoints, and database operations. 
 
+## Running Project Locally
+With new terminal,
+1. Enter the folder for backend server
+```bash
+cd api
+```
+3. Install Dependencies
+```bash
+pip install -r ../requirements.txt
+```
+5. Run the Flask server
+```bash
+python queries.py
+```
+With another separate terminal,
+1. Enter the folder for the frontend server
+```bash
+cd frontend
+```
+3. Run the React server
+```bash
+npm start
+```
+4. Open http://localhost:3000 to view it in your browser.
+   
 ## Downloading the Data
 
 ### Crime Data
