@@ -2,34 +2,121 @@
 This is the repo for the CIS 5500: Databases Final project. All of the relevant code will be in this repo. 
 
 ## Project Description
-The project is a full-stack public safety intelligence application, designed to visualize and analyze city safety data. The application is built with React and Flask where the React frontend provides the interactive, user-friendly interface, while the Flask backend handles the data ingestion, API endpoints, and database operations. 
+The project is a full-stack public safety intelligence application, designed to visualize and analyze city safety data. The application is built with React and Flask where the React frontend provides the interactive, user-friendly interface, while the Flask backend handles the data ingestion, API endpoints, and database operations.
+
+The dashboard includes 10 different query interfaces that allow users to:
+- View incidents by time and location
+- Analyze neighborhood safety patterns
+- Explore time-based danger analysis
+- Filter and search incidents across multiple data sources
+- Visualize data on interactive maps
+
+## Live Demo
+
+The application is currently deployed and accessible online at: **https://sf-safety-portal.onrender.com/**
+
+You can access the live application directly without needing to set up the project locally.
+
+## Prerequisites
+
+Before running this project, ensure you have the following installed:
+
+- **Python 3.x** (Python 3.8 or higher recommended)
+- **Node.js** (v14 or higher recommended)
+- **npm** (comes with Node.js)
+
+## Project Structure
+
+```
+CIS550_Project_Code/
+├── api/                                 # 1. Application code (backend)
+│   ├── queries.py                      # Main API endpoints
+│   ├── requirements.txt                # Python dependencies
+│   ├── README.md                       # Backend API documentation
+│   └── tests/                          # Backend tests
+├── frontend/                            # 1. Application code (frontend)
+│   ├── package.json                    # Node.js dependencies
+│   ├── public/                         # Frontend public files
+│   └── src/                            # Frontend source code
+│       ├── tests/                      # Frontend tests
+│       └── ...                         # React components
+├── data_processing/                     # 2. All code for cleaning, wrangling, and ingesting data
+│   ├── preprocessing.py                # Data cleaning, wrangling, and database ingestion
+│   ├── table_conversion.py             # Table conversion
+│   ├── ignore.txt                      # Cleaning configuration
+│   ├── download_data.ipynb             # Data download from BigQuery
+│   └── publicsafety_TABLES_DDL.sql    # Database structure DDL
+├── sql_databases/                       # Pre-built SQLite databases
+│   ├── processed_data.db               # Main database with all tables
+│   └── results.db                      # Results database
+├── data/                                # Original CSV data files
+│   └── *.csv
+├── processed_data/                      # Processed CSV files
+│   └── *.csv
+└── README.md                            # 4. Project description and local setup instructions
+``` 
 
 ## Running Project Locally
-With new terminal,
-1. Enter the folder for backend server
+
+### Backend Setup
+
+1. Enter the folder for backend server:
 ```bash
 cd api
 ```
-3. Install Dependencies
+
+2. Install Dependencies:
 ```bash
 pip install -r requirements.txt
 ```
-5. Run the Flask server
+
+3. Run the Flask server:
 ```bash
 python queries.py
 ```
-With another separate terminal,
-1. Enter the folder for the frontend server
+or
+```bash
+python3 queries.py
+```
+
+The backend server will start on `http://localhost:5001`
+
+### Frontend Setup
+
+1. Open a new terminal window and enter the folder for the frontend server:
 ```bash
 cd frontend
 ```
-3. Run the React server
+
+2. Install Node.js dependencies:
+```bash
+npm install
+```
+
+3. Run the React server:
 ```bash
 npm start
 ```
+
 4. Open http://localhost:3000 to view it in your browser.
+
+The frontend application will start on `http://localhost:3000` and automatically open in your browser.
+
+## Data Sources
+
+The application uses data from the following sources:
+1. 311 Service Requests
+2. Fire Incidents
+3. Fire Safety Complaints
+4. Fire Violations
+5. SFFD Service Calls
+6. SFPD Incidents
+
+All data has been cleaned and processed, with the original files available in `data/` and processed files in `processed_data/`.
    
-## Downloading the Data
+## Downloading the Data (Optional)
+
+The database is pre-built, so you can skip this section if you just want to run the application. This section is only needed if you want to regenerate the database from scratch.
 
 ### Crime Data
 
@@ -39,7 +126,7 @@ After that is complete, make sure to log in to your Google Cloud account by runn
 
 Install all of the required packages using pip: `pip install -r requirements.txt`
 
-Once complete, change the project-ID in the first cell in `download_data.ipynb` and then run the panels to download the data into the `/data` directory. 
+Once complete, change the project-ID in the first cell in `data_processing/download_data.ipynb` and then run the panels to download the data into the `data/` directory. 
 
 ## Fire Dataset
 
