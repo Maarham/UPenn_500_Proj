@@ -28,32 +28,42 @@ Before running this project, ensure you have the following installed:
 ## Project Structure
 
 ```
-CIS550_Project_Code/
-├── api/                                 # 1. Application code (backend)
+UPenn_500_Proj/
+├── api/                                 # Backend application code
 │   ├── queries.py                      # Main API endpoints
 │   ├── requirements.txt                # Python dependencies
-│   ├── README.md                       # Backend API documentation
-│   └── tests/                          # Backend tests
-├── frontend/                            # 1. Application code (frontend)
+│   ├── README.md
+│   └── tests/
+│       ├── test_queries.py
+│       └── test_utils.py
+├── frontend/                            # Frontend application code
 │   ├── package.json                    # Node.js dependencies
-│   ├── public/                         # Frontend public files
-│   └── src/                            # Frontend source code
-│       ├── tests/                      # Frontend tests
-│       └── ...                         # React components
-├── data_processing/                     # 2. All code for cleaning, wrangling, and ingesting data
-│   ├── preprocessing.py                # Data cleaning, wrangling, and database ingestion
-│   ├── table_conversion.py             # Table conversion
-│   ├── ignore.txt                      # Cleaning configuration
-│   ├── download_data.ipynb             # Data download from BigQuery
+│   ├── public/
+│   │   └── index.html
+│   └── src/
+│       ├── App.js                      # Main app component
+│       ├── Query1.js - Query10.js      # Query components
+│       ├── MapView.js                  # Map visualization
+│       ├── IncidentReport.js
+│       ├── utils.js
+│       └── tests/
+├── data_processing/                     # Data processing code
+│   ├── preprocessing.py                # Data cleaning and database ingestion
+│   └── table_conversion.py
+├── notebooks/                           # Jupyter notebooks
+│   └── download_data.ipynb            # Data download from BigQuery
+├── queries/                             # Query notebooks
+│   └── queries.ipynb
+├── SQL DDL/                             # Database schema definitions
 │   └── publicsafety_TABLES_DDL.sql    # Database structure DDL
 ├── sql_databases/                       # Pre-built SQLite databases
-│   ├── processed_data.db               # Main database with all tables
-│   └── results.db                      # Results database
+│   ├── processed_data.db              # Main database with all tables
+│   └── results.db
 ├── data/                                # Original CSV data files
-│   └── *.csv
+│   └── *.csv                           # 7 CSV files (311, fire, SFPD, SFFD data)
 ├── processed_data/                      # Processed CSV files
-│   └── *.csv
-└── README.md                            # 4. Project description and local setup instructions
+│   └── *.csv                           # Cleaned and processed data
+└── README.md                            # Project documentation
 ``` 
 
 ## Running Project Locally
